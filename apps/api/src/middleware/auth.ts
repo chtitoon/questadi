@@ -8,7 +8,7 @@ export function createAuthMiddleware(jwtSecret: string) {
     if (!header?.startsWith('Bearer ')) throw new UnauthorizedError('Missing authorization header');
     const token = header.slice(7);
     try {
-      const payload = jwt.verify(token, jwtSecret) as JwtPayload;
+      const payload = jwt.verify(token, jwtSecret, { algorithms: ['HS256'] }) as JwtPayload;
       c.set('user', { accountId: payload.sub, phone: payload.phone });
       await next();
     } catch {

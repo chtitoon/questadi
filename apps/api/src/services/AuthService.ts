@@ -1,3 +1,4 @@
+import crypto from 'node:crypto';
 import jwt from 'jsonwebtoken';
 import { Pool } from 'pg';
 import { AccountRepository } from '../repositories/AccountRepository';
@@ -25,7 +26,7 @@ export class AuthService {
     if (count >= 3) {
       throw new RateLimitError('Too many OTP requests. Try again in an hour.');
     }
-    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    const code = crypto.randomInt(100000, 1000000).toString();
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
     await this.otpRepo.create(phone, code, expiresAt);
     await this.twilio.sendOtp(phone, code);
