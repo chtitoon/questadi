@@ -1,0 +1,354 @@
+openapi: '3.1.0'
+info:
+  title: Questadi API
+  version: '1.0.0'
+
+servers:
+  - url: http://localhost:3000
+
+paths:
+  /auth/otp/request:
+    post:
+      operationId: requestOtp
+      tags: [auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OtpRequestBody'
+      responses:
+        '200':
+          description: OTP sent
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OtpSentResponse'
+
+  /auth/otp/verify:
+    post:
+      operationId: verifyOtp
+      tags: [auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OtpVerifyBody'
+      responses:
+        '200':
+          description: Authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+
+  /quotes:
+    post:
+      operationId: createQuote
+      tags: [quotes]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateQuoteRequest'
+      responses:
+        '200':
+          description: Duplicate quote
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Quote'
+        '201':
+          description: Quote created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Quote'
+
+  /quotes/library:
+    get:
+      operationId: getLibrary
+      tags: [quotes]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Library
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LibraryResponse'
+
+  /quotes/{id}/attribution:
+    patch:
+      operationId: updateAttribution
+      tags: [quotes]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [attributedTo]
+              properties:
+                attributedTo:
+                  $ref: '#/components/schemas/AttributedToInput'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Quote'
+
+  /quotes/{id}/restore:
+    patch:
+      operationId: restoreQuote
+      tags: [quotes]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Restored
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Quote'
+
+  /quotes/{id}:
+    delete:
+      operationId: deleteQuote
+      tags: [quotes]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Deleted
+
+  /accounts/search:
+    get:
+      operationId: searchAccounts
+      tags: [accounts]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+            minLength: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 20
+            default: 8
+      responses:
+        '200':
+          description: Autocomplete results
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AutocompleteResult'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    OtpRequestBody:
+      type: object
+      required: [phone]
+      properties:
+        phone:
+          type: string
+
+    OtpSentResponse:
+      type: object
+      required: [sent]
+      properties:
+        sent:
+          type: boolean
+
+    OtpVerifyBody:
+      type: object
+      required: [phone, code]
+      properties:
+        phone:
+          type: string
+        code:
+          type: string
+          minLength: 6
+          maxLength: 6
+
+    AuthResponse:
+      type: object
+      required: [token, account]
+      properties:
+        token:
+          type: string
+        account:
+          $ref: '#/components/schemas/Account'
+
+    Account:
+      type: object
+      required: [id, displayName, avatarInitials, registered, createdAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        displayName:
+          type: string
+        fullName:
+          type: string
+          nullable: true
+        phone:
+          type: string
+          nullable: true
+        contactId:
+          type: string
+          nullable: true
+        avatarInitials:
+          type: string
+        registered:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        lastActive:
+          type: string
+          format: date-time
+          nullable: true
+        createdBy:
+          type: string
+          format: uuid
+          nullable: true
+
+    AttributedToInput:
+      type: object
+      properties:
+        existingId:
+          type: string
+          format: uuid
+        phone:
+          type: string
+        displayName:
+          type: string
+          minLength: 1
+          maxLength: 100
+
+    CreateQuoteRequest:
+      type: object
+      required: [text]
+      properties:
+        text:
+          type: string
+          minLength: 1
+          maxLength: 500
+        attributedTo:
+          $ref: '#/components/schemas/AttributedToInput'
+
+    Quote:
+      type: object
+      required: [id, text, capturedBy, capturedAt, isPublic]
+      properties:
+        id:
+          type: string
+          format: uuid
+        text:
+          type: string
+        capturedBy:
+          type: string
+          format: uuid
+        attributedTo:
+          type: string
+          format: uuid
+          nullable: true
+        capturedAt:
+          type: string
+          format: date-time
+        isPublic:
+          type: boolean
+
+    LibraryPersonGroup:
+      type: object
+      required: [person, quotes, lastQuotedAt]
+      properties:
+        person:
+          $ref: '#/components/schemas/Account'
+        quotes:
+          type: array
+          items:
+            $ref: '#/components/schemas/Quote'
+        lastQuotedAt:
+          type: string
+          format: date-time
+
+    LibraryResponse:
+      type: object
+      required: [people, unattributed]
+      properties:
+        people:
+          type: array
+          items:
+            $ref: '#/components/schemas/LibraryPersonGroup'
+        unattributed:
+          type: array
+          items:
+            $ref: '#/components/schemas/Quote'
+
+    AutocompleteResult:
+      type: object
+      required: [id, displayName, avatarInitials]
+      properties:
+        id:
+          type: string
+          format: uuid
+        displayName:
+          type: string
+        fullName:
+          type: string
+          nullable: true
+        avatarInitials:
+          type: string
+        phone:
+          type: string
+          nullable: true
+        lastQuotedAt:
+          type: string
+          format: date-time
+          nullable: true

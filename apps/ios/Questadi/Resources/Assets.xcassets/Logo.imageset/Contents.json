@@ -1,0 +1,15 @@
+{
+  "images": [
+    {
+      "idiom": "universal",
+      "filename": "logo-light.png",
+      "appearances": [{ "appearance": "luminosity", "value": "light" }]
+    },
+    {
+      "idiom": "universal",
+      "filename": "logo-dark.png",
+      "appearances": [{ "appearance": "luminosity", "value": "dark" }]
+    }
+  ],
+  "info": { "author": "xcode", "version": 1 }
+}

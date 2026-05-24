@@ -1,0 +1,11 @@
+{
+  "name": "@questadi/api",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "generate": "openapi-typescript openapi.yaml -o dist/types.ts"
+  },
+  "devDependencies": {
+    "openapi-typescript": "^7.0.0"
+  }
+}

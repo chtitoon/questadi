@@ -1,0 +1,33 @@
+# Dependencies
+node_modules/
+
+# Local infrastructure
+docker-compose.yml
+
+# Environment — never commit secrets
+.env
+.env.local
+.env.*.local
+
+# Build output
+dist/
+build/
+
+# iOS
+apps/ios/Pods/
+apps/ios/*.xcworkspace/xcuserdata/
+apps/ios/**/*.xcuserstate
+apps/ios/DerivedData/
+*.ipa
+*.dSYM.zip
+
+# macOS
+.DS_Store
+
+# Claude Code
+.claude/settings.local.json
+
+# Editors
+.vscode/
+.idea/
+*.swp
