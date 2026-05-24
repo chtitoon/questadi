@@ -5,9 +5,7 @@
     "dev": "npm run generate && tsx watch src/index.ts",
     "build": "npm run generate && tsc",
     "start": "node dist/index.js",
-    "generate": "openapi-typescript ../../packages/api/openapi.yaml -o src/types/openapi.ts",
-    "hard-delete": "tsx scripts/hard-delete.ts",
-    "merge-anon": "tsx scripts/merge-duplicate-anon-accounts.ts"
+    "generate": "openapi-typescript ../../packages/api/openapi.yaml -o src/types/openapi.ts"
   },
   "dependencies": {
     "dotenv": "^16.4.5",
