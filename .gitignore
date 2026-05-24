@@ -13,6 +13,9 @@ docker-compose.yml
 dist/
 build/
 
+# Generated files
+apps/backend/src/types/openapi.ts
+
 # iOS
 apps/ios/Pods/
 apps/ios/*.xcworkspace/xcuserdata/
