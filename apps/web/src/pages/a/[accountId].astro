@@ -1,0 +1,31 @@
+---
+import Base from '../../layouts/Base.astro';
+import Author from '../../components/Author.astro';
+
+const { accountId } = Astro.params;
+const apiUrl = import.meta.env.API_URL;
+
+type AuthorData = {
+  accountId: string;
+  displayName: string;
+  quotes: Array<{ id: string; text: string; captured_at: string }>;
+};
+
+let data: AuthorData | null = null;
+let errorCode: string | null = null;
+
+try {
+  const res = await fetch(`${apiUrl}/quotes?author=${accountId}`);
+  if (res.ok) {
+    data = await res.json();
+  } else {
+    const body = await res.json().catch(() => ({}));
+    errorCode = body.code ?? 'INTERNAL_ERROR';
+  }
+} catch {
+  errorCode = 'INTERNAL_ERROR';
+}
+---
+<Base title={data ? `${data.displayName} — Questadi` : 'Questadi'}>
+  <Author data={data} errorCode={errorCode} />
+</Base>

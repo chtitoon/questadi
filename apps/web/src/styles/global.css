@@ -1,0 +1,33 @@
+@import '../../../../packages/design/tokens/dist/tokens.css';
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-family-base);
+  font-size: var(--text-base);
+  background: var(--bg-base);
+  color: var(--text-primary);
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-6);
+  transition:
+    background var(--duration-normal) var(--easing-default),
+    color var(--duration-normal) var(--easing-default);
+}
+
+button {
+  border: none;
+  font-family: var(--font-family-base);
+  cursor: pointer;
+}
+button:disabled {
+  cursor: default;
+}
+
+.hidden { display: none !important; }

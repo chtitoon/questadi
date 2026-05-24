@@ -1,0 +1,35 @@
+---
+import Base from '../../layouts/Base.astro';
+import Quote from '../../components/Quote.astro';
+
+const { token } = Astro.params;
+const apiUrl = import.meta.env.API_URL;
+
+type QuoteData = {
+  quoteText: string;
+  authorAccountId: string;
+  authorDisplayName: string;
+  capturerFirstName: string;
+  captured_at: string;
+  is_public: boolean;
+  removal_requested: boolean;
+};
+
+let data: QuoteData | null = null;
+let errorCode: string | null = null;
+
+try {
+  const res = await fetch(`${apiUrl}/links/${token}`);
+  if (res.ok) {
+    data = await res.json();
+  } else {
+    const body = await res.json().catch(() => ({}));
+    errorCode = body.code ?? 'INTERNAL_ERROR';
+  }
+} catch {
+  errorCode = 'INTERNAL_ERROR';
+}
+---
+<Base title={data ? `"${data.quoteText.slice(0, 60)}…"` : 'Questadi'}>
+  <Quote data={data} errorCode={errorCode} token={token!} />
+</Base>

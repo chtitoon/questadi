@@ -1,0 +1,114 @@
+---
+import Logo from './Logo.astro';
+
+interface Props {
+  data: {
+    accountId: string;
+    displayName: string;
+    quotes: Array<{ id: string; text: string; captured_at: string }>;
+  } | null;
+  errorCode: string | null;
+}
+
+const { data, errorCode } = Astro.props;
+
+function formatDate(iso: string) {
+  return new Date(iso).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+}
+
+const errorMessage = errorCode === 'NOT_FOUND'
+  ? 'Author not found.'
+  : errorCode
+  ? 'Something went wrong. Please try again.'
+  : null;
+---
+
+<div id="app">
+  <Logo width={248} />
+
+  {errorMessage ? (
+    <p class="state-msg">{errorMessage}</p>
+  ) : data && (
+    <>
+      <div id="profile">
+        <h1 class="author-name">{data.displayName}</h1>
+        <p class="quote-count">
+          {data.quotes.length === 0
+            ? 'No public quotes yet.'
+            : data.quotes.length === 1
+            ? '1 public quote'
+            : `${data.quotes.length} public quotes`}
+        </p>
+      </div>
+
+      {data.quotes.length > 0 && (
+        <div class="quote-list">
+          {data.quotes.map(q => (
+            <div class="quote-item">
+              <p class="quote-text">
+                <span class="quote-mark quote-open">"</span>{q.text.replace(/^"|"$/g, '').trim()}<span class="quote-mark quote-close">"</span>
+              </p>
+              <p class="quote-date">{formatDate(q.captured_at)}</p>
+            </div>
+          ))}
+        </div>
+      )}
+    </>
+  )}
+</div>
+
+<style>
+  #app {
+    max-width: 480px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-6);
+  }
+
+  .state-msg {
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: var(--text-base);
+  }
+
+  .author-name {
+    font-size: var(--text-xl);
+    font-weight: var(--font-semibold);
+    color: var(--text-primary);
+  }
+  .quote-count {
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+    margin-top: var(--space-1);
+  }
+
+  .quote-list { display: flex; flex-direction: column; gap: var(--space-4); }
+  .quote-item {
+    background: var(--bg-surface);
+    border-radius: var(--radius-xl);
+    padding: var(--space-6);
+    box-shadow: var(--shadow-md);
+  }
+  @media (prefers-color-scheme: dark) {
+    .quote-item { box-shadow: none; outline: 1px solid rgba(255,255,255,0.08); }
+  }
+
+  .quote-text {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: clamp(16px, 4vw, 22px);
+    line-height: var(--leading-normal);
+    color: var(--text-primary);
+  }
+  .quote-mark { font-size: 1.25em; vertical-align: -0.1em; }
+  .quote-open { letter-spacing: 0.15em; }
+  .quote-close { margin-left: 0.1em; }
+
+  .quote-date {
+    font-size: var(--text-xs);
+    color: var(--text-muted);
+    margin-top: var(--space-3);
+    opacity: 0.7;
+  }
+</style>

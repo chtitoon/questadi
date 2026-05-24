@@ -2,7 +2,12 @@
   "name": "questadi-web",
   "private": true,
   "scripts": {
-    "build": "node build.js",
-    "dev": "node server.js"
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview"
+  },
+  "dependencies": {
+    "@astrojs/cloudflare": "^13.5.4",
+    "astro": "^6.3.7"
   }
 }
