@@ -145,6 +145,7 @@ export function toAutocompleteResultDto(r: AutocompleteRow): AutocompleteResultD
     displayName: r.display_name,
     fullName: r.full_name ?? null,
     avatarInitials: r.avatar_initials,
+    phone: r.phone ?? null,
     lastQuotedAt: r.last_quoted_at?.toISOString() ?? null,
   };
 }

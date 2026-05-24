@@ -106,6 +106,12 @@ export class AccountRepository {
         AND q.captured_by = $2
         AND q.deleted_at IS NULL
        WHERE (a.display_name ILIKE $1 OR a.full_name ILIKE $1)
+         AND EXISTS (
+           SELECT 1 FROM quotes eq
+           WHERE eq.attributed_to = a.id
+             AND eq.captured_by = $2
+             AND eq.deleted_at IS NULL
+         )
        GROUP BY a.id
        ORDER BY MAX(q.captured_at) DESC NULLS LAST, a.display_name ASC
        LIMIT $3`,
