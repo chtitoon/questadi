@@ -10,17 +10,16 @@ paths:
 
   # ── Auth ──────────────────────────────────────────────────────────────────
 
-  /otp:
-    get:
+  /otp/request:
+    post:
       operationId: requestOtp
       tags: [auth]
-      parameters:
-        - name: phone
-          in: query
-          required: true
-          schema:
-            type: string
-            description: E.164 format, e.g. +14155552671
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OtpRequestBody'
       responses:
         '200':
           description: OTP sent
@@ -32,6 +31,8 @@ paths:
           $ref: '#/components/responses/BadRequest'
         '429':
           $ref: '#/components/responses/RateLimited'
+
+  /otp/verify:
     post:
       operationId: verifyOtp
       tags: [auth]
@@ -319,6 +320,14 @@ components:
           type: string
         code:
           type: string
+
+    OtpRequestBody:
+      type: object
+      required: [phone]
+      properties:
+        phone:
+          type: string
+          description: E.164 format, e.g. +14155552671
 
     OtpSentResponse:
       type: object
