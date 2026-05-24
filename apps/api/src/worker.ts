@@ -9,6 +9,7 @@ interface Env {
   TWILIO_PHONE_NUMBER: string;
   WEB_HOST: string;
   LOG_SMS?: string;
+  ALLOWED_ORIGIN?: string;
 }
 
 let app: ReturnType<typeof createApp> | null = null;
@@ -17,13 +18,14 @@ export default {
   fetch(request: Request, env: Env): Response | Promise<Response> {
     if (!app) {
       const config: AppConfig = {
-        databaseUrl:  env.HYPERDRIVE.connectionString,
-        jwtSecret:    env.JWT_SECRET,
-        twilioSid:    env.TWILIO_ACCOUNT_SID,
-        twilioToken:  env.TWILIO_AUTH_TOKEN,
-        twilioPhone:  env.TWILIO_PHONE_NUMBER,
-        webHost:      env.WEB_HOST,
-        logSms:       env.LOG_SMS === 'true',
+        databaseUrl:   env.HYPERDRIVE.connectionString,
+        jwtSecret:     env.JWT_SECRET,
+        twilioSid:     env.TWILIO_ACCOUNT_SID,
+        twilioToken:   env.TWILIO_AUTH_TOKEN,
+        twilioPhone:   env.TWILIO_PHONE_NUMBER,
+        webHost:       env.WEB_HOST,
+        logSms:        env.LOG_SMS === 'true',
+        allowedOrigin: env.ALLOWED_ORIGIN ?? `https://${env.WEB_HOST}`,
       };
       app = createApp(config);
     }

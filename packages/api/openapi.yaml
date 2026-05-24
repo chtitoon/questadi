@@ -345,9 +345,6 @@ components:
           nullable: true
         avatarInitials:
           type: string
-        phone:
-          type: string
-          nullable: true
         lastQuotedAt:
           type: string
           format: date-time

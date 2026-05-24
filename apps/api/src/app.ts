@@ -1,4 +1,7 @@
-import { Hono } from 'hono';
+import { Hono, type Context } from 'hono';
+import { cors } from 'hono/cors';
+import { secureHeaders } from 'hono/secure-headers';
+import { rateLimiter } from 'hono-rate-limiter';
 import { Pool } from 'pg';
 import { createTwilioClient } from './lib/twilio';
 import { createAuthMiddleware } from './middleware/auth';
@@ -28,6 +31,7 @@ export interface AppConfig {
   twilioPhone: string;
   webHost: string;
   logSms: boolean;
+  allowedOrigin: string;
 }
 
 export function createApp(config: AppConfig): Hono<{ Variables: HonoVariables }> {
@@ -54,9 +58,33 @@ export function createApp(config: AppConfig): Hono<{ Variables: HonoVariables }>
 
   const authMiddleware = createAuthMiddleware(config.jwtSecret);
 
+  const clientIp = (c: Context) =>
+    c.req.header('x-forwarded-for')?.split(',')[0].trim() ??
+    c.req.header('x-real-ip') ??
+    'unknown';
+
+  const otpVerifyLimiter = rateLimiter({
+    windowMs: 15 * 60 * 1000,
+    limit: 10,
+    standardHeaders: 'draft-6',
+    keyGenerator: clientIp,
+  });
+
+  const publicTokenLimiter = rateLimiter({
+    windowMs: 60 * 1000,
+    limit: 60,
+    standardHeaders: 'draft-6',
+    keyGenerator: clientIp,
+  });
+
   const app = new Hono<{ Variables: HonoVariables }>();
 
+  app.use('*', secureHeaders());
+  app.use('*', cors({ origin: config.allowedOrigin }));
+
+  app.use('/auth/otp/verify', otpVerifyLimiter);
   app.route('/auth',     authRouter(authService));
+  app.use('/q/*',        publicTokenLimiter);
   app.use('/quotes/*',   authMiddleware);
   app.use('/accounts/*', authMiddleware);
   app.route('/quotes',   quotesRouter(quoteService));
