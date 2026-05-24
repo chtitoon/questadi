@@ -82,7 +82,7 @@ export function createApp(config: AppConfig): Hono<{ Variables: HonoVariables }>
   app.use('*', cors({ origin: config.allowedOrigin }));
 
   app.use('/otp/*',    otpVerifyLimiter);
-  app.route('/',       authRouter(authService));
+  app.route('/otp',    authRouter(authService));
   app.use('/links/*',  publicTokenLimiter);
   app.use('/user/*',   authMiddleware);
   app.route('/user',   userRouter(quoteService, accountService));
