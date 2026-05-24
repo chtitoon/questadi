@@ -37,3 +37,6 @@ apps/ios/DerivedData/
 .vscode/
 .idea/
 *.swp
+
+# Astro generated
+.astro/
