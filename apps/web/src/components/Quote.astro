@@ -1,0 +1,249 @@
+---
+import Logo from './Logo.astro';
+
+interface Props {
+  token: string;
+  data: {
+    quoteText: string;
+    authorAccountId: string;
+    authorDisplayName: string;
+    capturerFirstName: string;
+    captured_at: string;
+    is_public: boolean;
+    removal_requested: boolean;
+  } | null;
+  errorCode: string | null;
+}
+
+const { token, data, errorCode } = Astro.props;
+
+function formatDate(iso: string) {
+  return new Date(iso).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+}
+
+const errorMessage = errorCode === 'QUOTE_DELETED'
+  ? 'This quote has been removed.'
+  : errorCode === 'TOKEN_EXPIRED'
+  ? 'This link has expired.'
+  : errorCode === 'NOT_FOUND'
+  ? 'This link was not found.'
+  : errorCode
+  ? 'Something went wrong. Please try again.'
+  : null;
+---
+
+<div id="app">
+  <Logo width={248} />
+
+  {errorMessage ? (
+    <p class="state-msg">{errorMessage}</p>
+  ) : data && (
+    <>
+      <div class="card">
+        <div class="quote-wrap">
+          <p class="quote-text">
+            <span class="quote-mark quote-open">"</span>{data.quoteText.replace(/^"|"$/g, '').trim()}<span class="quote-mark quote-close">"</span>
+          </p>
+        </div>
+        <p class="meta">
+          — <a href={`/a/${data.authorAccountId}`}>{data.authorDisplayName}</a>
+        </p>
+        {!data.is_public && (
+          <button id="btn-public" class="btn-primary">Make this public</button>
+        )}
+      </div>
+
+      <p class="secondary">
+        Captured by {data.capturerFirstName} · {formatDate(data.captured_at)}
+      </p>
+
+      <div class="badge-row">
+        {data.is_public && <span class="badge">✓ Public</span>}
+        {!data.is_public && <span id="badge-public" class="badge hidden">✓ Public</span>}
+        {!data.removal_requested
+          ? <button id="btn-removal" class="badge badge-btn">Request removal</button>
+          : <span class="badge">Removal requested</span>
+        }
+        <span id="label-removal" class="badge hidden">Removal requested</span>
+      </div>
+
+      <div id="confirm-dialog" class="dialog-overlay hidden">
+        <div class="dialog">
+          <p>This quote will be visible to others. You can undo this.</p>
+          <div class="dialog-actions">
+            <button id="btn-cancel" class="btn-secondary">Cancel</button>
+            <button id="btn-confirm" class="btn-primary">Make public</button>
+          </div>
+        </div>
+      </div>
+    </>
+  )}
+</div>
+
+<script define:vars={{ token }}>
+  const $ = (id) => document.getElementById(id);
+
+  const btnPublic  = $('btn-public');
+  const btnRemoval = $('btn-removal');
+
+  if (btnPublic) {
+    btnPublic.addEventListener('click', () => $('confirm-dialog').classList.remove('hidden'));
+    $('btn-cancel').addEventListener('click', () => $('confirm-dialog').classList.add('hidden'));
+    $('btn-confirm').addEventListener('click', async () => {
+      $('confirm-dialog').classList.add('hidden');
+      btnPublic.disabled = true;
+      btnPublic.textContent = '…';
+      try {
+        await fetch(`/api/links/${token}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ isPublic: true }),
+        });
+        btnPublic.classList.add('hidden');
+        $('badge-public').classList.remove('hidden');
+      } catch {
+        btnPublic.textContent = 'Make this public';
+        btnPublic.disabled = false;
+      }
+    });
+  }
+
+  if (btnRemoval) {
+    btnRemoval.addEventListener('click', async () => {
+      btnRemoval.disabled = true;
+      btnRemoval.textContent = '…';
+      try {
+        await fetch(`/api/links/${token}`, { method: 'DELETE' });
+        btnRemoval.classList.add('hidden');
+        $('label-removal').classList.remove('hidden');
+      } catch {
+        btnRemoval.textContent = 'Request removal';
+        btnRemoval.disabled = false;
+      }
+    });
+  }
+</script>
+
+<style>
+  #app {
+    max-width: 480px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-6);
+  }
+
+  .state-msg {
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: var(--text-base);
+    line-height: var(--leading-relaxed);
+  }
+
+  .card {
+    background: var(--bg-surface);
+    border-radius: var(--radius-xl);
+    padding: var(--space-8) var(--space-6);
+    box-shadow: var(--shadow-md);
+  }
+  @media (prefers-color-scheme: dark) {
+    .card { box-shadow: none; outline: 1px solid rgba(255,255,255,0.08); }
+  }
+
+  .quote-wrap { margin-bottom: var(--space-5); }
+  .quote-text {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: clamp(18px, 4.5vw, 26px);
+    line-height: var(--leading-normal);
+  }
+  .quote-mark { font-size: 1.25em; vertical-align: -0.1em; }
+  .quote-open { letter-spacing: 0.15em; }
+  .quote-close { margin-left: 0.1em; }
+
+  .meta {
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+    margin-bottom: var(--space-5);
+    text-align: right;
+  }
+  .meta a { color: inherit; }
+
+  .secondary {
+    font-size: var(--text-xs);
+    color: var(--text-muted);
+    opacity: 0.6;
+  }
+
+  .btn-primary {
+    background: var(--color-brand-500);
+    color: #fff;
+    border-radius: var(--radius-md);
+    padding: var(--space-3) var(--space-5);
+    font-size: var(--text-sm);
+    font-weight: var(--font-semibold);
+    transition: background var(--duration-fast) var(--easing-default);
+  }
+  .btn-primary:hover:not(:disabled) { background: var(--color-brand-600); }
+  .btn-primary:disabled { opacity: 0.5; }
+
+  .badge-row { display: flex; align-items: center; gap: var(--space-2); }
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    font-size: var(--text-xs);
+    font-weight: var(--font-medium);
+    padding: 3px var(--space-3);
+    border-radius: 999px;
+    background: var(--bg-surface);
+    color: var(--text-muted);
+    border: 1px solid transparent;
+    line-height: 1.4;
+  }
+  @media (prefers-color-scheme: dark) {
+    .badge { background: transparent; border-color: rgba(255,255,255,0.1); }
+  }
+  .badge-btn {
+    cursor: pointer;
+    font-family: var(--font-family-base);
+    transition: color var(--duration-fast), border-color var(--duration-fast);
+  }
+  .badge-btn:hover { color: var(--text-secondary); border-color: rgba(0,0,0,0.15); }
+  @media (prefers-color-scheme: dark) {
+    .badge-btn:hover { border-color: rgba(255,255,255,0.2); }
+  }
+  .badge-btn:disabled { opacity: 0.5; cursor: default; }
+
+  .dialog-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.5);
+    display: flex; align-items: center; justify-content: center;
+    padding: var(--space-6);
+  }
+  .dialog {
+    background: var(--bg-elevated);
+    border-radius: var(--radius-lg);
+    padding: var(--space-6);
+    max-width: 360px; width: 100%;
+  }
+  @media (prefers-color-scheme: dark) {
+    .dialog { outline: 1px solid rgba(255,255,255,0.08); }
+  }
+  .dialog p {
+    font-size: var(--text-sm);
+    line-height: var(--leading-normal);
+    color: var(--text-secondary);
+    margin-bottom: var(--space-5);
+  }
+  .dialog-actions { display: flex; gap: var(--space-2); justify-content: flex-end; }
+  .btn-secondary {
+    background: var(--btn-secondary-bg);
+    color: var(--btn-secondary-text);
+    border-radius: var(--radius-md);
+    padding: var(--space-2) var(--space-4);
+    font-size: var(--text-sm);
+    font-weight: var(--font-semibold);
+    transition: background var(--duration-fast);
+  }
+  .btn-secondary:hover { background: var(--btn-secondary-hover); }
+</style>

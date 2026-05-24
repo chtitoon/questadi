@@ -101,20 +101,20 @@ export class QuoteService {
     capturedById: string,
   ): Promise<string | null> {
     if (!input) return null;
-    if ('existingId' in input) return input.existingId;
+    if ('existingId' in input) return input.existingId!;
     if ('phone' in input) {
       const account = await this.accountRepo.upsertByPhone(
-        input.phone,
-        input.displayName,
-        deriveInitials(input.displayName),
+        input.phone!,
+        input.displayName!,
+        deriveInitials(input.displayName!),
         capturedById,
       );
       return account.id;
     }
     if ('displayName' in input) {
       const account = await this.accountRepo.createAnonymous(
-        input.displayName,
-        deriveInitials(input.displayName),
+        input.displayName!,
+        deriveInitials(input.displayName!),
         capturedById,
       );
       return account.id;
