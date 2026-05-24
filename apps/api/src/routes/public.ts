@@ -8,19 +8,19 @@ const patchLinkSchema = z.object({ isPublic: z.literal(true) });
 export function publicRouter(quoteLinkService: QuoteLinkService): Hono {
   const router = new Hono();
 
-  router.get('/tokens/:token', async (c) => {
+  router.get('/links/:token', async (c) => {
     const payload = await quoteLinkService.resolveToken(c.req.param('token'));
     return c.json(payload);
   });
 
-  router.patch('/tokens/:token', async (c) => {
+  router.patch('/links/:token', async (c) => {
     const body = await c.req.json().catch(() => ({}));
     const { isPublic } = patchLinkSchema.parse(body);
     if (isPublic) await quoteLinkService.acceptPublic(c.req.param('token'));
     return c.json({ isPublic: true });
   });
 
-  router.delete('/tokens/:token', async (c) => {
+  router.delete('/links/:token', async (c) => {
     const body = await c.req.json().catch(() => ({}));
     const { message } = removalSchema.parse(body);
     await quoteLinkService.requestRemoval(c.req.param('token'), message);

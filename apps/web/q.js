@@ -24,7 +24,7 @@
 
     let data;
     try {
-      const res = await fetch(`${API_BASE}/tokens/${token}`);
+      const res = await fetch(`${API_BASE}/links/${token}`);
       if (res.status === 404) { setState('This link was not found.'); return; }
       if (res.status === 410) {
         const body = await res.json().catch(() => ({}));
@@ -73,7 +73,7 @@
       $('btn-public').disabled = true;
       $('btn-public').textContent = '…';
       try {
-        await fetch(`${API_BASE}/tokens/${token}`, {
+        await fetch(`${API_BASE}/links/${token}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ isPublic: true }),
@@ -91,7 +91,7 @@
       $('btn-removal').disabled = true;
       $('btn-removal').textContent = '…';
       try {
-        await fetch(`${API_BASE}/tokens/${token}`, {
+        await fetch(`${API_BASE}/links/${token}`, {
           method: 'DELETE',
         });
         hide('btn-removal');
