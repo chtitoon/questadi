@@ -1,14 +1,16 @@
-import { Router } from 'express';
+import { Hono } from 'hono';
 import { AccountService } from '../services/AccountService';
+import type { HonoVariables } from '../types/index';
 
-export function accountsRouter(accountService: AccountService): Router {
-  const router = Router();
+export function accountsRouter(accountService: AccountService): Hono<{ Variables: HonoVariables }> {
+  const router = new Hono<{ Variables: HonoVariables }>();
 
-  router.get('/search', async (req, res) => {
-    const q = req.query.q as string;
-    const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 8;
-    const results = await accountService.searchForAutocomplete(q, req.user!.accountId, limit);
-    res.json(results);
+  router.get('/search', async (c) => {
+    const q = c.req.query('q') ?? '';
+    const limit = parseInt(c.req.query('limit') ?? '8', 10);
+    const user = c.get('user');
+    const results = await accountService.searchForAutocomplete(q, user.accountId, limit);
+    return c.json(results);
   });
 
   return router;

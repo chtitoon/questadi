@@ -185,6 +185,10 @@ export class ValidationError extends AppError {
   constructor(message: string) { super('VALIDATION_ERROR', 400, message); this.name = 'ValidationError'; }
 }
 
+// ── Hono context variables ────────────────────────────────────────────────────
+
+export type HonoVariables = { user: { accountId: string; phone: string } };
+
 // ── JWT ───────────────────────────────────────────────────────────────────────
 
 export interface JwtPayload {
@@ -194,12 +198,3 @@ export interface JwtPayload {
   exp: number;
 }
 
-// ── Express augmentation ──────────────────────────────────────────────────────
-
-declare global {
-  namespace Express {
-    interface Request {
-      user?: { accountId: string; phone: string };
-    }
-  }
-}

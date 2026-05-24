@@ -1,39 +1,44 @@
-import { Router } from 'express';
+import { Hono } from 'hono';
 import { QuoteService } from '../services/QuoteService';
-import type { CreateQuoteRequest, AttributedToInput } from '../types/index';
+import type { CreateQuoteRequest, AttributedToInput, HonoVariables } from '../types/index';
 
-export function quotesRouter(quoteService: QuoteService): Router {
-  const router = Router();
+export function quotesRouter(quoteService: QuoteService): Hono<{ Variables: HonoVariables }> {
+  const router = new Hono<{ Variables: HonoVariables }>();
 
-  router.post('/', async (req, res) => {
-    const body = req.body as CreateQuoteRequest;
-const { quote, isDuplicate } = await quoteService.createQuote(req.user!.accountId, body);
-    res.status(isDuplicate ? 200 : 201).json(quote);
+  router.post('/', async (c) => {
+    const body = await c.req.json<CreateQuoteRequest>();
+    const user = c.get('user');
+    const { quote, isDuplicate } = await quoteService.createQuote(user.accountId, body);
+    return c.json(quote, isDuplicate ? 200 : 201);
   });
 
-  router.get('/library', async (req, res) => {
-    const library = await quoteService.getLibrary(req.user!.accountId);
-    res.json(library);
+  router.get('/library', async (c) => {
+    const user = c.get('user');
+    const library = await quoteService.getLibrary(user.accountId);
+    return c.json(library);
   });
 
-  router.patch('/:id/attribution', async (req, res) => {
-    const { attributedTo } = req.body as { attributedTo: AttributedToInput };
-    const quote = await quoteService.updateAttribution(req.params.id, req.user!.accountId, attributedTo);
-    res.json(quote);
+  router.patch('/:id/attribution', async (c) => {
+    const { attributedTo } = await c.req.json<{ attributedTo: AttributedToInput }>();
+    const user = c.get('user');
+    const quote = await quoteService.updateAttribution(c.req.param('id'), user.accountId, attributedTo);
+    return c.json(quote);
   });
 
-  router.patch('/:id/restore', async (req, res) => {
-    const quote = await quoteService.restore(req.params.id, req.user!.accountId);
-    res.json(quote);
+  router.patch('/:id/restore', async (c) => {
+    const user = c.get('user');
+    const quote = await quoteService.restore(c.req.param('id'), user.accountId);
+    return c.json(quote);
   });
 
-  router.patch('/:id/text', (_req, res) => {
-    res.status(405).json({ error: 'Quote text is immutable', code: 'METHOD_NOT_ALLOWED' });
+  router.patch('/:id/text', (c) => {
+    return c.json({ error: 'Quote text is immutable', code: 'METHOD_NOT_ALLOWED' }, 405);
   });
 
-  router.delete('/:id', async (req, res) => {
-    await quoteService.softDelete(req.params.id, req.user!.accountId);
-    res.sendStatus(204);
+  router.delete('/:id', async (c) => {
+    const user = c.get('user');
+    await quoteService.softDelete(c.req.param('id'), user.accountId);
+    return new Response(null, { status: 204 });
   });
 
   return router;

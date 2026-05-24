@@ -1,31 +1,32 @@
-import { Router } from 'express';
+import { Hono } from 'hono';
 import { z } from 'zod';
 import { QuoteLinkService } from '../services/QuoteLinkService';
 
 const removalSchema = z.object({ message: z.string().max(500).optional() });
 
-export function publicRouter(quoteLinkService: QuoteLinkService): Router {
-  const router = Router();
+export function publicRouter(quoteLinkService: QuoteLinkService): Hono {
+  const router = new Hono();
 
-  router.get('/q/:token', async (req, res) => {
-    const payload = await quoteLinkService.resolveToken(req.params.token);
-    res.json(payload);
+  router.get('/q/:token', async (c) => {
+    const payload = await quoteLinkService.resolveToken(c.req.param('token'));
+    return c.json(payload);
   });
 
-  router.post('/q/:token/public', async (req, res) => {
-    await quoteLinkService.acceptPublic(req.params.token);
-    res.json({ isPublic: true });
+  router.post('/q/:token/public', async (c) => {
+    await quoteLinkService.acceptPublic(c.req.param('token'));
+    return c.json({ isPublic: true });
   });
 
-  router.post('/q/:token/removal', async (req, res) => {
-    const { message } = removalSchema.parse(req.body);
-    await quoteLinkService.requestRemoval(req.params.token, message);
-    res.json({ requested: true });
+  router.post('/q/:token/removal', async (c) => {
+    const body = await c.req.json().catch(() => ({}));
+    const { message } = removalSchema.parse(body);
+    await quoteLinkService.requestRemoval(c.req.param('token'), message);
+    return c.json({ requested: true });
   });
 
-  router.get('/a/:accountId', async (req, res) => {
-    const profile = await quoteLinkService.getPersonProfile(req.params.accountId);
-    res.json(profile);
+  router.get('/a/:accountId', async (c) => {
+    const profile = await quoteLinkService.getPersonProfile(c.req.param('accountId'));
+    return c.json(profile);
   });
 
   return router;
