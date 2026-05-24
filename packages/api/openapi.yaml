@@ -203,8 +203,7 @@ paths:
         '410':
           $ref: '#/components/responses/Gone'
 
-  /tokens/{token}/removal-requests:
-    post:
+    delete:
       operationId: requestRemoval
       tags: [public]
       parameters:
@@ -220,35 +219,28 @@ paths:
                   type: string
                   maxLength: 500
       responses:
-        '201':
+        '204':
           description: Removal request submitted
-          content:
-            application/json:
-              schema:
-                type: object
-                required: [requested]
-                properties:
-                  requested:
-                    type: boolean
         '404':
           $ref: '#/components/responses/NotFound'
         '410':
           $ref: '#/components/responses/Gone'
 
-  /authors/{accountId}/quotes:
+  /quotes:
     get:
-      operationId: getAuthorQuotes
+      operationId: getPublicQuotes
       tags: [public]
       parameters:
-        - name: accountId
-          in: path
+        - name: author
+          in: query
           required: true
           schema:
             type: string
             format: uuid
+          description: Account ID of the person whose public quotes to fetch
       responses:
         '200':
-          description: Author's public quote profile
+          description: Public quotes for the given author
           content:
             application/json:
               schema:

@@ -20,15 +20,17 @@ export function publicRouter(quoteLinkService: QuoteLinkService): Hono {
     return c.json({ isPublic: true });
   });
 
-  router.post('/tokens/:token/removal-requests', async (c) => {
+  router.delete('/tokens/:token', async (c) => {
     const body = await c.req.json().catch(() => ({}));
     const { message } = removalSchema.parse(body);
     await quoteLinkService.requestRemoval(c.req.param('token'), message);
-    return c.json({ requested: true }, 201);
+    return new Response(null, { status: 204 });
   });
 
-  router.get('/authors/:accountId/quotes', async (c) => {
-    const profile = await quoteLinkService.getPersonProfile(c.req.param('accountId'));
+  router.get('/quotes', async (c) => {
+    const author = c.req.query('author');
+    if (!author) return c.json({ error: 'author query parameter is required', code: 'VALIDATION_ERROR' }, 400);
+    const profile = await quoteLinkService.getPersonProfile(author);
     return c.json(profile);
   });
 

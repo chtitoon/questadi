@@ -44,7 +44,7 @@
     const quoteBody = escapeHtml(data.quoteText.replace(/^"|"$/g, '').trim());
     $('quote-text').innerHTML = '<span class="quote-mark quote-open">“</span>' + quoteBody + '<span class="quote-mark quote-close">”</span>';
     const authorLink = document.createElement('a');
-    authorLink.href = `/authors/${encodeURIComponent(data.authorAccountId)}`;
+    authorLink.href = `/quotes?author=${encodeURIComponent(data.authorAccountId)}`;
     authorLink.textContent = data.authorDisplayName;
     $('quote-meta').innerHTML = '— ';
     $('quote-meta').appendChild(authorLink);
@@ -91,10 +91,8 @@
       $('btn-removal').disabled = true;
       $('btn-removal').textContent = '…';
       try {
-        await fetch(`${API_BASE}/tokens/${token}/removal-requests`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({}),
+        await fetch(`${API_BASE}/tokens/${token}`, {
+          method: 'DELETE',
         });
         hide('btn-removal');
         show('label-removal');
