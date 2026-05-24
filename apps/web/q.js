@@ -44,7 +44,7 @@
     const quoteBody = escapeHtml(data.quoteText.replace(/^"|"$/g, '').trim());
     $('quote-text').innerHTML = '<span class="quote-mark quote-open">“</span>' + quoteBody + '<span class="quote-mark quote-close">”</span>';
     const authorLink = document.createElement('a');
-    authorLink.href = `/quotes?author=${encodeURIComponent(data.authorAccountId)}`;
+    authorLink.href = `/a/${data.authorAccountId}`;
     authorLink.textContent = data.authorDisplayName;
     $('quote-meta').innerHTML = '— ';
     $('quote-meta').appendChild(authorLink);

@@ -28,7 +28,7 @@
 
     let data;
     try {
-      const res = await fetch(`${API_BASE}/a/${accountId}`);
+      const res = await fetch(`${API_BASE}/quotes?author=${accountId}`);
       if (res.status === 404) { setState('Author not found.'); return; }
       if (!res.ok) { setState('Something went wrong. Please try again.'); return; }
       data = await res.json();
