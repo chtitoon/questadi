@@ -24,7 +24,7 @@
 
     let data;
     try {
-      const res = await fetch(`${API_BASE}/q/${token}`);
+      const res = await fetch(`${API_BASE}/tokens/${token}`);
       if (res.status === 404) { setState('This link was not found.'); return; }
       if (res.status === 410) {
         const body = await res.json().catch(() => ({}));
@@ -44,7 +44,7 @@
     const quoteBody = escapeHtml(data.quoteText.replace(/^"|"$/g, '').trim());
     $('quote-text').innerHTML = '<span class="quote-mark quote-open">“</span>' + quoteBody + '<span class="quote-mark quote-close">”</span>';
     const authorLink = document.createElement('a');
-    authorLink.href = `/a/${encodeURIComponent(data.authorAccountId)}`;
+    authorLink.href = `/authors/${encodeURIComponent(data.authorAccountId)}`;
     authorLink.textContent = data.authorDisplayName;
     $('quote-meta').innerHTML = '— ';
     $('quote-meta').appendChild(authorLink);
@@ -73,7 +73,11 @@
       $('btn-public').disabled = true;
       $('btn-public').textContent = '…';
       try {
-        await fetch(`${API_BASE}/web/q/${token}/public`, { method: 'POST' });
+        await fetch(`${API_BASE}/tokens/${token}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ isPublic: true }),
+        });
         hide('btn-public');
         show('badge-public');
       } catch {
@@ -87,9 +91,11 @@
       $('btn-removal').disabled = true;
       $('btn-removal').textContent = '…';
       try {
-        await fetch(`${API_BASE}/web/q/${token}/removal`, { method: 'POST',
+        await fetch(`${API_BASE}/tokens/${token}/removal-requests`, {
+          method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({}) });
+          body: JSON.stringify({}),
+        });
         hide('btn-removal');
         show('label-removal');
       } catch {

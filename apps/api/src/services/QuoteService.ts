@@ -4,7 +4,6 @@ import { NotificationService } from './NotificationService';
 import {
   Account,
   AttributedToInput,
-  ConflictError,
   CreateQuoteRequest,
   ForbiddenError,
   LibraryPersonGroupDto,
@@ -97,36 +96,13 @@ export class QuoteService {
     if (!quote) throw new NotFoundError('Quote not found or already deleted');
   }
 
-  async restore(id: string, capturedById: string): Promise<QuoteDto> {
-    const quote = await this.quoteRepo.restore(id, capturedById);
-    if (!quote) throw new NotFoundError('Quote not found or restore window expired');
-    return toQuoteDto(quote);
-  }
-
-  async updateAttribution(
-    id: string,
-    capturedById: string,
-    input: AttributedToInput,
-  ): Promise<QuoteDto> {
-    const attributedToId = await this.resolveAttributedTo(input, capturedById);
-    if (!attributedToId) throw new ConflictError('Attribution target is required');
-
-    const quote = await this.quoteRepo.updateAttribution(id, capturedById, attributedToId);
-    if (!quote) throw new NotFoundError('Quote not found or already attributed');
-
-    if (input.phone) {
-      this.notifService.dispatchAsync(quote.id);
-    }
-    return toQuoteDto(quote);
-  }
-
   private async resolveAttributedTo(
     input: AttributedToInput | undefined,
     capturedById: string,
   ): Promise<string | null> {
     if (!input) return null;
-    if (input.existingId) return input.existingId;
-    if (input.phone && input.displayName) {
+    if ('existingId' in input) return input.existingId;
+    if ('phone' in input) {
       const account = await this.accountRepo.upsertByPhone(
         input.phone,
         input.displayName,
@@ -135,7 +111,7 @@ export class QuoteService {
       );
       return account.id;
     }
-    if (input.displayName) {
+    if ('displayName' in input) {
       const account = await this.accountRepo.createAnonymous(
         input.displayName,
         deriveInitials(input.displayName),

@@ -18,8 +18,7 @@ import { NotificationService } from './services/NotificationService';
 import { QuoteService } from './services/QuoteService';
 import { QuoteLinkService } from './services/QuoteLinkService';
 import { authRouter } from './routes/auth';
-import { quotesRouter } from './routes/quotes';
-import { accountsRouter } from './routes/accounts';
+import { userRouter } from './routes/user';
 import { publicRouter } from './routes/public';
 import type { HonoVariables } from './types/index';
 
@@ -83,13 +82,11 @@ export function createApp(config: AppConfig): Hono<{ Variables: HonoVariables }>
   app.use('*', cors({ origin: config.allowedOrigin }));
 
   app.use('/auth/otp/verify', otpVerifyLimiter);
-  app.route('/auth',     authRouter(authService));
-  app.use('/q/*',        publicTokenLimiter);
-  app.use('/quotes/*',   authMiddleware);
-  app.use('/accounts/*', authMiddleware);
-  app.route('/quotes',   quotesRouter(quoteService));
-  app.route('/accounts', accountsRouter(accountService));
-  app.route('/',         publicRouter(quoteLinkService));
+  app.route('/auth',   authRouter(authService));
+  app.use('/tokens/*', publicTokenLimiter);
+  app.use('/user/*',   authMiddleware);
+  app.route('/user',   userRouter(quoteService, accountService));
+  app.route('/',       publicRouter(quoteLinkService));
 
   app.onError((err, c) => errorHandler(err, c));
 
