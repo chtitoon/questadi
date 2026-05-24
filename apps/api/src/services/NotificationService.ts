@@ -3,7 +3,7 @@ import { AccountRepository } from '../repositories/AccountRepository';
 import { NotificationRepository } from '../repositories/NotificationRepository';
 import { QuoteRepository } from '../repositories/QuoteRepository';
 import { QuoteLinkRepository } from '../repositories/QuoteLinkRepository';
-import { twilioClient } from '../lib/twilio';
+import type { TwilioClient } from '../lib/twilio';
 import { logger } from '../lib/logger';
 
 function hoursAgo(h: number): Date {
@@ -14,11 +14,12 @@ export function buildSmsBody(
   capturerFirstName: string,
   quoteText: string,
   token: string,
+  webHost: string,
 ): string {
   return (
     `${capturerFirstName} just captured something you said.\n\n` +
     `"${quoteText}"\n\n` +
-    `See your legend: https://${process.env.WEB_HOST}/q/${token}`
+    `See your legend: https://${webHost}/q/${token}`
   );
 }
 
@@ -28,6 +29,8 @@ export class NotificationService {
     private accountRepo: AccountRepository,
     private notifRepo: NotificationRepository,
     private quoteLinkRepo: QuoteLinkRepository,
+    private webHost: string,
+    private twilio: TwilioClient,
   ) {}
 
   dispatchAsync(quoteId: string): void {
@@ -60,9 +63,9 @@ export class NotificationService {
 
         const capturer = await this.accountRepo.findById(quote.captured_by);
         const firstName = ((capturer?.full_name ?? capturer?.display_name) || 'Someone').split(' ')[0];
-        const body = buildSmsBody(firstName, quote.text, token);
+        const body = buildSmsBody(firstName, quote.text, token, this.webHost);
 
-        await twilioClient.sendSms(recipient.phone, body);
+        await this.twilio.sendSms(recipient.phone, body);
         await this.notifRepo.updateStatus(notification.id, 'sent', new Date());
       } catch (err) {
         if (notificationId) {

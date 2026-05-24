@@ -1,26 +1,29 @@
 import twilio from 'twilio';
 import { logger } from './logger';
 
-const DEV_SMS = process.env.LOG_SMS === 'true';
+export interface TwilioClient {
+  sendSms(to: string, body: string): Promise<void>;
+  sendOtp(phone: string, code: string): Promise<void>;
+}
 
-const client = DEV_SMS
-  ? null
-  : twilio(process.env.TWILIO_ACCOUNT_SID!, process.env.TWILIO_AUTH_TOKEN!);
+export function createTwilioClient(config: {
+  sid: string;
+  token: string;
+  phone: string;
+  logSms: boolean;
+}): TwilioClient {
+  const client = config.logSms ? null : twilio(config.sid, config.token);
 
-export const twilioClient = {
-  async sendSms(to: string, body: string): Promise<void> {
-    if (DEV_SMS) {
-      logger.info('DEV SMS (not sent)', { to, body });
-      return;
-    }
-    await client!.messages.create({
-      from: process.env.TWILIO_PHONE_NUMBER!,
-      to,
-      body,
-    });
-  },
-
-  async sendOtp(phone: string, code: string): Promise<void> {
-    await this.sendSms(phone, `Your Questadi code: ${code}. Expires in 10 minutes.`);
-  },
-};
+  return {
+    async sendSms(to, body) {
+      if (config.logSms) {
+        logger.info('DEV SMS (not sent)', { to, body });
+        return;
+      }
+      await client!.messages.create({ from: config.phone, to, body });
+    },
+    async sendOtp(phone, code) {
+      await this.sendSms(phone, `Your Questadi code: ${code}. Expires in 10 minutes.`);
+    },
+  };
+}

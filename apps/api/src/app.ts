@@ -1,0 +1,69 @@
+import { Hono } from 'hono';
+import { Pool } from 'pg';
+import { createTwilioClient } from './lib/twilio';
+import { createAuthMiddleware } from './middleware/auth';
+import { errorHandler } from './middleware/error';
+import { AccountRepository } from './repositories/AccountRepository';
+import { NotificationRepository } from './repositories/NotificationRepository';
+import { OtpRepository } from './repositories/OtpRepository';
+import { QuoteRepository } from './repositories/QuoteRepository';
+import { RemovalRequestRepository } from './repositories/RemovalRequestRepository';
+import { QuoteLinkRepository } from './repositories/QuoteLinkRepository';
+import { AccountService } from './services/AccountService';
+import { AuthService } from './services/AuthService';
+import { NotificationService } from './services/NotificationService';
+import { QuoteService } from './services/QuoteService';
+import { QuoteLinkService } from './services/QuoteLinkService';
+import { authRouter } from './routes/auth';
+import { quotesRouter } from './routes/quotes';
+import { accountsRouter } from './routes/accounts';
+import { publicRouter } from './routes/public';
+import type { HonoVariables } from './types/index';
+
+export interface AppConfig {
+  databaseUrl: string;
+  jwtSecret: string;
+  twilioSid: string;
+  twilioToken: string;
+  twilioPhone: string;
+  webHost: string;
+  logSms: boolean;
+}
+
+export function createApp(config: AppConfig): Hono<{ Variables: HonoVariables }> {
+  const pool = new Pool({ connectionString: config.databaseUrl });
+  const twilio = createTwilioClient({
+    sid: config.twilioSid,
+    token: config.twilioToken,
+    phone: config.twilioPhone,
+    logSms: config.logSms,
+  });
+
+  const accountRepo   = new AccountRepository(pool);
+  const quoteRepo     = new QuoteRepository(pool);
+  const otpRepo       = new OtpRepository(pool);
+  const notifRepo     = new NotificationRepository(pool);
+  const quoteLinkRepo = new QuoteLinkRepository(pool);
+  const removalRepo   = new RemovalRequestRepository(pool);
+
+  const notifService     = new NotificationService(quoteRepo, accountRepo, notifRepo, quoteLinkRepo, config.webHost, twilio);
+  const authService      = new AuthService(accountRepo, otpRepo, pool, config.jwtSecret, twilio);
+  const quoteService     = new QuoteService(quoteRepo, accountRepo, notifService);
+  const quoteLinkService = new QuoteLinkService(quoteLinkRepo, quoteRepo, accountRepo, removalRepo);
+  const accountService   = new AccountService(accountRepo);
+
+  const authMiddleware = createAuthMiddleware(config.jwtSecret);
+
+  const app = new Hono<{ Variables: HonoVariables }>();
+
+  app.route('/auth',     authRouter(authService));
+  app.use('/quotes/*',   authMiddleware);
+  app.use('/accounts/*', authMiddleware);
+  app.route('/quotes',   quotesRouter(quoteService));
+  app.route('/accounts', accountsRouter(accountService));
+  app.route('/',         publicRouter(quoteLinkService));
+
+  app.onError((err, c) => errorHandler(err, c));
+
+  return app;
+}

@@ -2,7 +2,7 @@ import jwt from 'jsonwebtoken';
 import { Pool } from 'pg';
 import { AccountRepository } from '../repositories/AccountRepository';
 import { OtpRepository } from '../repositories/OtpRepository';
-import { twilioClient } from '../lib/twilio';
+import type { TwilioClient } from '../lib/twilio';
 import { AccountDto, RateLimitError, UnauthorizedError, ValidationError, toAccountDto } from '../types/index';
 
 const PHONE_RE = /^\+[1-9]\d{6,14}$/;
@@ -11,6 +11,9 @@ export class AuthService {
   constructor(
     private accountRepo: AccountRepository,
     private otpRepo: OtpRepository,
+    private pool: Pool,
+    private jwtSecret: string,
+    private twilio: TwilioClient,
   ) {}
 
   async requestOtp(phone: string): Promise<void> {
@@ -25,21 +28,17 @@ export class AuthService {
     const code = Math.floor(100000 + Math.random() * 900000).toString();
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
     await this.otpRepo.create(phone, code, expiresAt);
-    await twilioClient.sendOtp(phone, code);
+    await this.twilio.sendOtp(phone, code);
   }
 
-  async verifyOtp(
-    phone: string,
-    code: string,
-    pool: Pool,
-  ): Promise<{ token: string; account: AccountDto }> {
+  async verifyOtp(phone: string, code: string): Promise<{ token: string; account: AccountDto }> {
     const otp = await this.otpRepo.findValid(phone, code);
     if (!otp) {
       throw new UnauthorizedError('Invalid or expired code');
     }
     await this.otpRepo.markUsed(otp.id);
 
-    const client = await pool.connect();
+    const client = await this.pool.connect();
     let accountRow;
     try {
       await client.query('BEGIN');
@@ -57,7 +56,7 @@ export class AuthService {
 
     const token = jwt.sign(
       { sub: accountRow.id, phone: accountRow.phone },
-      process.env.JWT_SECRET!,
+      this.jwtSecret,
       { expiresIn: '7d' },
     );
     return { token, account: toAccountDto(accountRow) };

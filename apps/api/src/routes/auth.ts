@@ -1,8 +1,7 @@
 import { Hono } from 'hono';
-import { Pool } from 'pg';
 import { AuthService } from '../services/AuthService';
 
-export function authRouter(authService: AuthService, pool: Pool): Hono {
+export function authRouter(authService: AuthService): Hono {
   const router = new Hono();
 
   router.post('/otp/request', async (c) => {
@@ -13,7 +12,7 @@ export function authRouter(authService: AuthService, pool: Pool): Hono {
 
   router.post('/otp/verify', async (c) => {
     const { phone, code } = await c.req.json<{ phone: string; code: string }>();
-    const result = await authService.verifyOtp(phone, code, pool);
+    const result = await authService.verifyOtp(phone, code);
     return c.json(result);
   });
 
