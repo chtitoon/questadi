@@ -13,6 +13,9 @@ docker-compose.yml
 dist/
 build/
 
+# Wrangler local cache
+.wrangler/
+
 # Generated files
 apps/api/src/types/openapi.ts
 
