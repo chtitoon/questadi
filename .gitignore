@@ -14,7 +14,7 @@ dist/
 build/
 
 # Generated files
-apps/backend/src/types/openapi.ts
+apps/api/src/types/openapi.ts
 
 # iOS
 apps/ios/Pods/

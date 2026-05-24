@@ -1,5 +1,5 @@
 {
-  "name": "questadi-backend",
+  "name": "questadi-api",
   "version": "1.0.0",
   "scripts": {
     "dev": "npm run generate && tsx watch src/index.ts",
