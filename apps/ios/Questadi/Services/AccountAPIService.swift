@@ -8,7 +8,7 @@ final class AccountAPIService {
             URLQueryItem(name: "q",     value: query),
             URLQueryItem(name: "limit", value: "\(limit)"),
         ]
-        let results: [AutocompleteResult] = try await client.request(.get("/accounts/search", query: items))
+        let results: [AutocompleteResult] = try await client.request(.get("/user/contacts", query: items))
         return results.map { $0.toSuggestion() }
     }
 }

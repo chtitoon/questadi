@@ -92,35 +92,6 @@ export class QuoteRepository {
     return rows[0] ?? null;
   }
 
-  async restore(id: string, capturedBy: string): Promise<Quote | null> {
-    const { rows } = await this.pool.query<Quote>(
-      `UPDATE quotes
-       SET deleted_at = NULL
-       WHERE id = $1
-         AND captured_by = $2
-         AND deleted_at IS NOT NULL
-         AND deleted_at > now() - interval '30 days'
-       RETURNING *`,
-      [id, capturedBy],
-    );
-    return rows[0] ?? null;
-  }
-
-  async updateAttribution(
-    id: string,
-    capturedBy: string,
-    attributedTo: string,
-  ): Promise<Quote | null> {
-    const { rows } = await this.pool.query<Quote>(
-      `UPDATE quotes
-       SET attributed_to = $3
-       WHERE id = $1 AND captured_by = $2 AND attributed_to IS NULL
-       RETURNING *`,
-      [id, capturedBy, attributedTo],
-    );
-    return rows[0] ?? null;
-  }
-
   async getPublicByPerson(accountId: string): Promise<Quote[]> {
     const { rows } = await this.pool.query<Quote>(
       `SELECT * FROM quotes
