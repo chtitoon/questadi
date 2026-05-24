@@ -1,4 +1,4 @@
-import type { components } from '../../../../packages/api/dist/types';
+import type { components } from './openapi';
 
 // ── API DTO types (derived from OpenAPI spec) ─────────────────────────────────
 
