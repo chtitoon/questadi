@@ -1,20 +1,22 @@
-import type { Sql } from 'postgres';
+import type { Client } from 'pg';
 import { RemovalRequest } from '../types/index';
 
 export class RemovalRequestRepository {
-  constructor(private sql: Sql) {}
+  constructor(private sql: Client) {}
 
   async existsForQuote(quoteId: string): Promise<boolean> {
-    const [{ exists }] = await this.sql<[{ exists: boolean }]>`
-      SELECT EXISTS(SELECT 1 FROM removal_requests WHERE quote_id = ${quoteId}) AS exists`;
+    const { rows: [{ exists }] } = await this.sql.query<{ exists: boolean }>(
+      `SELECT EXISTS(SELECT 1 FROM removal_requests WHERE quote_id = $1) AS exists`,
+      [quoteId],
+    );
     return exists;
   }
 
   async create(quoteId: string, message?: string): Promise<RemovalRequest> {
-    const [row] = await this.sql<RemovalRequest[]>`
-      INSERT INTO removal_requests (quote_id, message)
-      VALUES (${quoteId}, ${message ?? null})
-      RETURNING *`;
+    const { rows: [row] } = await this.sql.query<RemovalRequest>(
+      `INSERT INTO removal_requests (quote_id, message) VALUES ($1, $2) RETURNING *`,
+      [quoteId, message ?? null],
+    );
     return row;
   }
 }

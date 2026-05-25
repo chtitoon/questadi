@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { secureHeaders } from 'hono/secure-headers';
-import postgres from 'postgres';
+import { Client } from 'pg';
 import { authMiddleware } from './middleware/auth';
 import { errorHandler } from './middleware/error';
 import { authRouter } from './routes/auth';
@@ -18,17 +18,18 @@ app.use('*', async (c, next) => {
   return cors({ origin })(c, next);
 });
 
-// Per-request postgres instance. In CF Workers, connects to Hyperdrive's local
+// Per-request pg Client. In CF Workers, connects to Hyperdrive's local
 // proxy (sub-millisecond); Hyperdrive owns the real pool to Supabase. In Node.js
 // dev, connects directly via DATABASE_URL.
 app.use('*', async (c, next) => {
-  const connStr = c.env.HYPERDRIVE?.connectionString ?? c.env.DATABASE_URL!;
-  const sql = postgres(connStr, { max: 1, fetch_types: false });
-  c.set('sql', sql);
+  const connectionString = c.env.HYPERDRIVE?.connectionString ?? c.env.DATABASE_URL!;
+  const client = new Client({ connectionString });
+  await client.connect();
+  c.set('sql', client);
   try {
     await next();
   } finally {
-    c.executionCtx.waitUntil(sql.end({ timeout: 5 }));
+    await client.end();
   }
 });
 

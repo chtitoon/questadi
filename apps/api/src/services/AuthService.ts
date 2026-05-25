@@ -1,6 +1,6 @@
 import crypto from 'node:crypto';
 import jwt from 'jsonwebtoken';
-import type { Sql } from 'postgres';
+import type { Client } from 'pg';
 import { AccountRepository } from '../repositories/AccountRepository';
 import { OtpRepository } from '../repositories/OtpRepository';
 import type { TwilioClient } from '../lib/twilio';
@@ -12,7 +12,7 @@ export class AuthService {
   constructor(
     private accountRepo: AccountRepository,
     private otpRepo: OtpRepository,
-    private sql: Sql,
+    private sql: Client,
     private jwtSecret: string,
     private twilio: TwilioClient,
   ) {}
@@ -39,9 +39,16 @@ export class AuthService {
     }
     await this.otpRepo.markUsed(otp.id);
 
-    let accountRow = await this.sql.begin(sql =>
-      this.accountRepo.promoteToRegistered(phone, sql),
-    );
+    await this.sql.query('BEGIN');
+    let accountRow;
+    try {
+      accountRow = await this.accountRepo.promoteToRegistered(phone, this.sql);
+      await this.sql.query('COMMIT');
+    } catch (e) {
+      await this.sql.query('ROLLBACK');
+      throw e;
+    }
+
     if (!accountRow) {
       accountRow = await this.accountRepo.createRegistered(phone, 'Me', 'ME');
     }

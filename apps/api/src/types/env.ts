@@ -1,4 +1,4 @@
-import type { Sql } from 'postgres';
+import type { Client } from 'pg';
 
 export type Bindings = {
   HYPERDRIVE?: { connectionString: string };
@@ -14,7 +14,7 @@ export type Bindings = {
 
 export type AppVariables = {
   user: { accountId: string; phone: string };
-  sql: Sql;
+  sql: Client;
 };
 
 export type HonoEnv = {
