@@ -24,7 +24,7 @@ try {
     data = await res.json();
   } else {
     const body = await res.json().catch(() => ({}));
-    errorCode = body.code ?? 'INTERNAL_ERROR';
+    errorCode = body.code ?? (res.status === 404 ? 'NOT_FOUND' : 'INTERNAL_ERROR');
   }
 } catch {
   errorCode = 'INTERNAL_ERROR';

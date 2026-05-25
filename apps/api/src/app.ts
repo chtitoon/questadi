@@ -30,7 +30,8 @@ app.use('*', async (c, next) => {
   try {
     await next();
   } finally {
-    c.executionCtx.waitUntil(client.end());
+    const endPromise = client.end().catch(() => {});
+    try { c.executionCtx.waitUntil(endPromise); } catch { /* no ExecutionContext (e.g. local dev) */ }
   }
 });
 
@@ -39,6 +40,7 @@ app.use('/user/*', authMiddleware);
 app.route('/user', userRouter);
 app.route('/', publicRouter);
 
+app.notFound((c) => c.json({ error: 'Not found', code: 'NOT_FOUND' }, 404));
 app.onError((err, c) => errorHandler(err, c));
 
 export default app;
