@@ -2,8 +2,10 @@
 import Base from '../../layouts/Base.astro';
 import Quote from '../../components/Quote.astro';
 
+import { env } from 'cloudflare:workers';
+
 const { token } = Astro.params;
-const apiUrl = import.meta.env.API_URL;
+const api = (env as unknown as { API: Fetcher }).API;
 
 type QuoteData = {
   quoteText: string;
@@ -19,7 +21,7 @@ let data: QuoteData | null = null;
 let errorCode: string | null = null;
 
 try {
-  const res = await fetch(`${apiUrl}/links/${token}`);
+  const res = await api.fetch(new Request(`https://api/links/${token}`));
   if (res.ok) {
     data = await res.json();
   } else {
