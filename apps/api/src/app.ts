@@ -7,7 +7,6 @@ import { errorHandler } from './middleware/error';
 import { authRouter } from './routes/auth';
 import { userRouter } from './routes/user';
 import { publicRouter } from './routes/public';
-import { logger, timed } from './lib/logger';
 import type { HonoEnv } from './types/env';
 
 const app = new Hono<HonoEnv>();
@@ -26,9 +25,8 @@ app.use('*', async (c, next) => {
   const connectionString = c.env.HYPERDRIVE?.connectionString ?? c.env.DATABASE_URL!;
   const client = new Client({ connectionString, connectionTimeoutMillis: 5000 });
 
-  const [, connectMs] = await timed(() => client.connect());
+  await client.connect();
   await client.query('SET statement_timeout = 10000');
-  logger.info('db.connect', { connectMs, via: c.env.HYPERDRIVE ? 'hyperdrive' : 'direct' });
 
   c.set('sql', client);
   try {
