@@ -1,7 +1,7 @@
 function log(level: string, msg: string, meta?: object): void {
-  process[level === 'error' ? 'stderr' : 'stdout'].write(
-    JSON.stringify({ level, msg, ts: new Date().toISOString(), ...meta }) + '\n',
-  );
+  const line = JSON.stringify({ level, msg, ts: new Date().toISOString(), ...meta });
+  if (level === 'error') console.error(line);
+  else console.log(line);
 }
 
 export const logger = {
