@@ -43,7 +43,6 @@ export default {
       max:                     1,
       connectionTimeoutMillis: 5000,
       query_timeout:           8000,
-      statement_timeout:       8000,
     });
     ctx.waitUntil(pool.end());
 
