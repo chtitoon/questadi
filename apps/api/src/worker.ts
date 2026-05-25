@@ -36,16 +36,17 @@ export default {
     if (!config) config = buildConfig(env);
 
     // Pool is created per-request with max:1 so Hyperdrive can cleanly reuse its
-    // backend connection. ctx.waitUntil(pool.end()) signals a proper close after
-    // the response is sent, preventing connections from accumulating on Supabase.
+    // backend connection. pool.end() is chained after the response so it only
+    // runs once all queries have completed, preventing connections accumulating.
     const pool = new Pool({
       connectionString:        env.HYPERDRIVE.connectionString,
       max:                     1,
       connectionTimeoutMillis: 5000,
       query_timeout:           8000,
     });
-    ctx.waitUntil(pool.end());
 
-    return createApp(config, pool).fetch(request);
+    const response = createApp(config, pool).fetch(request);
+    ctx.waitUntil(Promise.resolve(response).then(() => pool.end(), () => pool.end()));
+    return response;
   },
 };
