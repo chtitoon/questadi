@@ -1,3 +1,4 @@
+import { Pool } from 'pg';
 import { createApp } from './app';
 import type { AppConfig } from './app';
 
@@ -17,8 +18,12 @@ let app: ReturnType<typeof createApp> | null = null;
 export default {
   fetch(request: Request, env: Env): Response | Promise<Response> {
     if (!app) {
-      const config: AppConfig = {
-        databaseUrl:   env.HYPERDRIVE.connectionString,
+      const pool = new Pool({
+        connectionString:       env.HYPERDRIVE.connectionString,
+        connectionTimeoutMillis: 5000,
+        idleTimeoutMillis:       10000,
+      });
+      app = createApp({
         jwtSecret:     env.JWT_SECRET,
         twilioSid:     env.TWILIO_ACCOUNT_SID,
         twilioToken:   env.TWILIO_AUTH_TOKEN,
@@ -26,8 +31,7 @@ export default {
         webHost:       env.WEB_HOST,
         logSms:        env.LOG_SMS === 'true',
         allowedOrigin: env.ALLOWED_ORIGIN ?? `https://${env.WEB_HOST}`,
-      };
-      app = createApp(config);
+      }, pool);
     }
     return app.fetch(request);
   },

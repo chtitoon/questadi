@@ -23,7 +23,6 @@ import { publicRouter } from './routes/public';
 import type { HonoVariables } from './types/index';
 
 export interface AppConfig {
-  databaseUrl: string;
   jwtSecret: string;
   twilioSid: string;
   twilioToken: string;
@@ -33,8 +32,7 @@ export interface AppConfig {
   allowedOrigin: string;
 }
 
-export function createApp(config: AppConfig): Hono<{ Variables: HonoVariables }> {
-  const pool = new Pool({ connectionString: config.databaseUrl });
+export function createApp(config: AppConfig, pool: Pool): Hono<{ Variables: HonoVariables }> {
   const twilio = createTwilioClient({
     sid: config.twilioSid,
     token: config.twilioToken,
