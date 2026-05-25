@@ -19,6 +19,7 @@ build/
 # Generated files
 apps/api/src/types/openapi.ts
 apps/web/src/styles/tokens.css
+apps/ios/Questadi/App/DesignTokens.swift
 
 # iOS
 apps/ios/Pods/

@@ -38,6 +38,13 @@ targets:
         product: OpenAPIRuntime
       - package: swift-openapi-urlsession
         product: OpenAPIURLSession
+    preBuildScripts:
+      - name: Generate Design Tokens
+        script: |
+          export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
+          node "${SRCROOT}/scripts/generate-tokens.js"
+        outputFiles:
+          - $(SRCROOT)/Questadi/App/DesignTokens.swift
     buildToolPlugins:
       - plugin: OpenAPIGenerator
         package: swift-openapi-generator
