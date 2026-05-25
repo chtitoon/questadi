@@ -26,11 +26,7 @@ app.use('*', async (c, next) => {
   const client = new Client({ connectionString });
   await client.connect();
   c.set('sql', client);
-  try {
-    await next();
-  } finally {
-    await client.end();
-  }
+  await next();
 });
 
 app.route('/otp', authRouter);
