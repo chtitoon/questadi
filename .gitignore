@@ -34,6 +34,7 @@ apps/ios/DerivedData/
 
 # Claude Code
 .claude/settings.local.json
+.claude/worktrees/
 
 # Editors
 .vscode/
