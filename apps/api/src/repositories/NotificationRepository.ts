@@ -1,4 +1,4 @@
-import { Pool } from 'pg';
+import type { Sql } from 'postgres';
 import { Notification } from '../types/index';
 
 export interface CreateNotificationData {
@@ -7,39 +7,29 @@ export interface CreateNotificationData {
 }
 
 export class NotificationRepository {
-  constructor(private pool: Pool) {}
+  constructor(private sql: Sql) {}
 
   async create(data: CreateNotificationData): Promise<Notification> {
-    const { rows } = await this.pool.query<Notification>(
-      `INSERT INTO notifications (quote_id, recipient)
-       VALUES ($1, $2)
-       RETURNING *`,
-      [data.quote_id, data.recipient],
-    );
-    return rows[0];
+    const [row] = await this.sql<Notification[]>`
+      INSERT INTO notifications (quote_id, recipient)
+      VALUES (${data.quote_id}, ${data.recipient})
+      RETURNING *`;
+    return row;
   }
 
-  async updateStatus(
-    id: string,
-    status: 'pending' | 'sent' | 'delivered' | 'failed',
-    sentAt?: Date,
-  ): Promise<void> {
-    await this.pool.query(
-      `UPDATE notifications
-       SET delivery_status = $2, sent_at = COALESCE($3, sent_at)
-       WHERE id = $1`,
-      [id, status, sentAt ?? null],
-    );
+  async updateStatus(id: string, status: 'pending' | 'sent' | 'delivered' | 'failed', sentAt?: Date): Promise<void> {
+    await this.sql`
+      UPDATE notifications
+      SET delivery_status = ${status}, sent_at = COALESCE(${sentAt ?? null}, sent_at)
+      WHERE id = ${id}`;
   }
 
   async countRecent(recipientId: string, since: Date): Promise<number> {
-    const { rows } = await this.pool.query<{ count: string }>(
-      `SELECT COUNT(*) FROM notifications
-       WHERE recipient = $1
-         AND delivery_status IN ('pending','sent','delivered')
-         AND (sent_at > $2 OR created_at > $2)`,
-      [recipientId, since],
-    );
-    return parseInt(rows[0].count, 10);
+    const [{ count }] = await this.sql<[{ count: string }]>`
+      SELECT COUNT(*) FROM notifications
+      WHERE recipient = ${recipientId}
+        AND delivery_status IN ('pending', 'sent', 'delivered')
+        AND (sent_at > ${since} OR created_at > ${since})`;
+    return parseInt(count, 10);
   }
 }

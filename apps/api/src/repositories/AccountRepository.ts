@@ -1,4 +1,4 @@
-import { Pool, PoolClient } from 'pg';
+import type { Sql, TransactionSql } from 'postgres';
 import { Account, AutocompleteRow } from '../types/index';
 
 export function deriveInitials(name: string): string {
@@ -9,114 +9,79 @@ export function deriveInitials(name: string): string {
 }
 
 export class AccountRepository {
-  constructor(private pool: Pool) {}
+  constructor(private sql: Sql) {}
 
-  async upsertByPhone(
-    phone: string,
-    displayName: string,
-    avatarInitials: string,
-    createdBy: string,
-  ): Promise<Account> {
-    // Always returns the row: updates display/initials only if not yet registered
-    const { rows } = await this.pool.query<Account>(
-      `INSERT INTO accounts (display_name, avatar_initials, phone, created_by)
-       VALUES ($1, $2, $3, $4)
-       ON CONFLICT (phone) WHERE phone IS NOT NULL DO UPDATE
-         SET display_name    = CASE WHEN accounts.registered = false THEN EXCLUDED.display_name    ELSE accounts.display_name    END,
-             avatar_initials = CASE WHEN accounts.registered = false THEN EXCLUDED.avatar_initials ELSE accounts.avatar_initials END
-       RETURNING *`,
-      [displayName, avatarInitials, phone, createdBy],
-    );
-    return rows[0];
+  async upsertByPhone(phone: string, displayName: string, avatarInitials: string, createdBy: string): Promise<Account> {
+    const [row] = await this.sql<Account[]>`
+      INSERT INTO accounts (display_name, avatar_initials, phone, created_by)
+      VALUES (${displayName}, ${avatarInitials}, ${phone}, ${createdBy})
+      ON CONFLICT (phone) WHERE phone IS NOT NULL DO UPDATE
+        SET display_name    = CASE WHEN accounts.registered = false THEN EXCLUDED.display_name    ELSE accounts.display_name    END,
+            avatar_initials = CASE WHEN accounts.registered = false THEN EXCLUDED.avatar_initials ELSE accounts.avatar_initials END
+      RETURNING *`;
+    return row;
   }
 
-  async createAnonymous(
-    displayName: string,
-    avatarInitials: string,
-    createdBy: string,
-  ): Promise<Account> {
-    const { rows } = await this.pool.query<Account>(
-      `INSERT INTO accounts (display_name, avatar_initials, created_by)
-       VALUES ($1, $2, $3)
-       RETURNING *`,
-      [displayName, avatarInitials, createdBy],
-    );
-    return rows[0];
+  async createAnonymous(displayName: string, avatarInitials: string, createdBy: string): Promise<Account> {
+    const [row] = await this.sql<Account[]>`
+      INSERT INTO accounts (display_name, avatar_initials, created_by)
+      VALUES (${displayName}, ${avatarInitials}, ${createdBy})
+      RETURNING *`;
+    return row;
   }
 
   async findById(id: string): Promise<Account | null> {
-    const { rows } = await this.pool.query<Account>(
-      'SELECT * FROM accounts WHERE id = $1',
-      [id],
-    );
-    return rows[0] ?? null;
+    const [row] = await this.sql<Account[]>`SELECT * FROM accounts WHERE id = ${id}`;
+    return row ?? null;
   }
 
   async findByPhone(phone: string): Promise<Account | null> {
-    const { rows } = await this.pool.query<Account>(
-      'SELECT * FROM accounts WHERE phone = $1',
-      [phone],
-    );
-    return rows[0] ?? null;
+    const [row] = await this.sql<Account[]>`SELECT * FROM accounts WHERE phone = ${phone}`;
+    return row ?? null;
   }
 
-  async promoteToRegistered(phone: string, client: PoolClient): Promise<Account> {
-    await client.query('SELECT id FROM accounts WHERE phone = $1 FOR UPDATE', [phone]);
-    const { rows } = await client.query<Account>(
-      `UPDATE accounts
-       SET registered = true, last_active = now()
-       WHERE phone = $1 AND registered = false
-       RETURNING *`,
-      [phone],
-    );
-    if (rows.length > 0) return rows[0];
-    // Already registered — return existing row
-    const existing = await client.query<Account>(
-      'SELECT * FROM accounts WHERE phone = $1',
-      [phone],
-    );
-    return existing.rows[0];
+  // Returns null when no account exists for this phone yet (caller should createRegistered).
+  // Must be called inside a transaction so the FOR UPDATE lock is held.
+  async promoteToRegistered(phone: string, sql: TransactionSql): Promise<Account | null> {
+    const locked = await sql<Account[]>`SELECT id FROM accounts WHERE phone = ${phone} FOR UPDATE`;
+    if (!locked.length) return null;
+
+    const [updated] = await sql<Account[]>`
+      UPDATE accounts SET registered = true, last_active = now()
+      WHERE phone = ${phone} AND registered = false
+      RETURNING *`;
+    if (updated) return updated;
+
+    const [existing] = await sql<Account[]>`SELECT * FROM accounts WHERE phone = ${phone}`;
+    return existing ?? null;
   }
 
-  async createRegistered(
-    phone: string,
-    displayName: string,
-    avatarInitials: string,
-  ): Promise<Account> {
-    const { rows } = await this.pool.query<Account>(
-      `INSERT INTO accounts (phone, display_name, avatar_initials, registered, last_active)
-       VALUES ($1, $2, $3, true, now())
-       RETURNING *`,
-      [phone, displayName, avatarInitials],
-    );
-    return rows[0];
+  async createRegistered(phone: string, displayName: string, avatarInitials: string): Promise<Account> {
+    const [row] = await this.sql<Account[]>`
+      INSERT INTO accounts (phone, display_name, avatar_initials, registered, last_active)
+      VALUES (${phone}, ${displayName}, ${avatarInitials}, true, now())
+      RETURNING *`;
+    return row;
   }
 
-  async searchForAutocomplete(
-    query: string,
-    capturerId: string,
-    limit: number,
-  ): Promise<AutocompleteRow[]> {
-    const { rows } = await this.pool.query<AutocompleteRow>(
-      `SELECT a.id, a.display_name, a.full_name, a.avatar_initials, a.phone,
-              MAX(q.captured_at) AS last_quoted_at
-       FROM accounts a
-       LEFT JOIN quotes q
-         ON q.attributed_to = a.id
-        AND q.captured_by = $2
-        AND q.deleted_at IS NULL
-       WHERE (a.display_name ILIKE $1 OR a.full_name ILIKE $1)
-         AND EXISTS (
-           SELECT 1 FROM quotes eq
-           WHERE eq.attributed_to = a.id
-             AND eq.captured_by = $2
-             AND eq.deleted_at IS NULL
-         )
-       GROUP BY a.id
-       ORDER BY MAX(q.captured_at) DESC NULLS LAST, a.display_name ASC
-       LIMIT $3`,
-      [query + '%', capturerId, limit],
-    );
-    return rows;
+  async searchForAutocomplete(query: string, capturerId: string, limit: number): Promise<AutocompleteRow[]> {
+    return this.sql<AutocompleteRow[]>`
+      SELECT a.id, a.display_name, a.full_name, a.avatar_initials, a.phone,
+             MAX(q.captured_at) AS last_quoted_at
+      FROM accounts a
+      LEFT JOIN quotes q
+        ON q.attributed_to = a.id
+       AND q.captured_by = ${capturerId}
+       AND q.deleted_at IS NULL
+      WHERE (a.display_name ILIKE ${query + '%'} OR a.full_name ILIKE ${query + '%'})
+        AND EXISTS (
+          SELECT 1 FROM quotes eq
+          WHERE eq.attributed_to = a.id
+            AND eq.captured_by = ${capturerId}
+            AND eq.deleted_at IS NULL
+        )
+      GROUP BY a.id
+      ORDER BY MAX(q.captured_at) DESC NULLS LAST, a.display_name ASC
+      LIMIT ${limit}`;
   }
 }
