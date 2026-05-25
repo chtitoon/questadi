@@ -23,10 +23,15 @@ app.use('*', async (c, next) => {
 // dev, connects directly via DATABASE_URL.
 app.use('*', async (c, next) => {
   const connectionString = c.env.HYPERDRIVE?.connectionString ?? c.env.DATABASE_URL!;
-  const client = new Client({ connectionString });
+  const client = new Client({ connectionString, connectionTimeoutMillis: 5000 });
   await client.connect();
+  await client.query('SET statement_timeout = 10000');
   c.set('sql', client);
-  await next();
+  try {
+    await next();
+  } finally {
+    c.executionCtx.waitUntil(client.end());
+  }
 });
 
 app.route('/otp', authRouter);
