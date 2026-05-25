@@ -19,9 +19,11 @@ export default {
   fetch(request: Request, env: Env): Response | Promise<Response> {
     if (!app) {
       const pool = new Pool({
-        connectionString:       env.HYPERDRIVE.connectionString,
+        connectionString:        env.HYPERDRIVE.connectionString,
         connectionTimeoutMillis: 5000,
         idleTimeoutMillis:       10000,
+        query_timeout:           8000,  // pg throws if no response within 8s
+        statement_timeout:       8000,  // postgres kills query server-side after 8s
       });
       app = createApp({
         jwtSecret:     env.JWT_SECRET,
