@@ -40,6 +40,7 @@ app.use('/user/*', authMiddleware);
 app.route('/user', userRouter);
 app.route('/', publicRouter);
 
+app.notFound((c) => c.json({ error: 'Not found', code: 'NOT_FOUND' }, 404));
 app.onError((err, c) => errorHandler(err, c));
 
 export default app;
