@@ -1,4 +1,4 @@
-import { Pool } from 'pg';
+import type { Sql } from 'postgres';
 import { Quote } from '../types/index';
 
 export interface CreateQuoteData {
@@ -8,7 +8,6 @@ export interface CreateQuoteData {
 }
 
 export interface LibraryRow extends Quote {
-  // attributed account columns aliased
   a_id: string | null;
   a_display_name: string | null;
   a_full_name: string | null;
@@ -21,97 +20,70 @@ export interface LibraryRow extends Quote {
 }
 
 export class QuoteRepository {
-  constructor(private pool: Pool) {}
+  constructor(private sql: Sql) {}
 
   async create(data: CreateQuoteData): Promise<Quote> {
-    const { rows } = await this.pool.query<Quote>(
-      `INSERT INTO quotes (text, captured_by, attributed_to)
-       VALUES ($1, $2, $3)
-       RETURNING *`,
-      [data.text, data.captured_by, data.attributed_to],
-    );
-    return rows[0];
+    const [row] = await this.sql<Quote[]>`
+      INSERT INTO quotes (text, captured_by, attributed_to)
+      VALUES (${data.text}, ${data.captured_by}, ${data.attributed_to})
+      RETURNING *`;
+    return row;
   }
 
   async findById(id: string): Promise<Quote | null> {
-    const { rows } = await this.pool.query<Quote>(
-      'SELECT * FROM quotes WHERE id = $1',
-      [id],
-    );
-    return rows[0] ?? null;
+    const [row] = await this.sql<Quote[]>`SELECT * FROM quotes WHERE id = ${id}`;
+    return row ?? null;
   }
 
-  async findDuplicate(
-    capturedBy: string,
-    attributedTo: string | null,
-    text: string,
-  ): Promise<Quote | null> {
-    const { rows } = await this.pool.query<Quote>(
-      `SELECT * FROM quotes
-       WHERE captured_by = $1
-         AND attributed_to IS NOT DISTINCT FROM $2
-         AND text = $3
-         AND captured_at > now() - interval '60 seconds'
-         AND deleted_at IS NULL
-       LIMIT 1`,
-      [capturedBy, attributedTo, text],
-    );
-    return rows[0] ?? null;
+  async findDuplicate(capturedBy: string, attributedTo: string | null, text: string): Promise<Quote | null> {
+    const [row] = await this.sql<Quote[]>`
+      SELECT * FROM quotes
+      WHERE captured_by = ${capturedBy}
+        AND attributed_to IS NOT DISTINCT FROM ${attributedTo}
+        AND text = ${text}
+        AND captured_at > now() - interval '60 seconds'
+        AND deleted_at IS NULL
+      LIMIT 1`;
+    return row ?? null;
   }
 
   async getLibrary(capturedBy: string): Promise<LibraryRow[]> {
-    const { rows } = await this.pool.query<LibraryRow>(
-      `SELECT
-         q.*,
-         a.id              AS a_id,
-         a.display_name    AS a_display_name,
-         a.full_name       AS a_full_name,
-         a.phone           AS a_phone,
-         a.avatar_initials AS a_avatar_initials,
-         a.registered      AS a_registered,
-         a.created_at      AS a_created_at,
-         a.last_active     AS a_last_active,
-         a.created_by      AS a_created_by
-       FROM quotes q
-       LEFT JOIN accounts a ON q.attributed_to = a.id
-       WHERE q.captured_by = $1 AND q.deleted_at IS NULL
-       ORDER BY q.captured_at DESC`,
-      [capturedBy],
-    );
-    return rows;
+    return this.sql<LibraryRow[]>`
+      SELECT
+        q.*,
+        a.id              AS a_id,
+        a.display_name    AS a_display_name,
+        a.full_name       AS a_full_name,
+        a.phone           AS a_phone,
+        a.avatar_initials AS a_avatar_initials,
+        a.registered      AS a_registered,
+        a.created_at      AS a_created_at,
+        a.last_active     AS a_last_active,
+        a.created_by      AS a_created_by
+      FROM quotes q
+      LEFT JOIN accounts a ON q.attributed_to = a.id
+      WHERE q.captured_by = ${capturedBy} AND q.deleted_at IS NULL
+      ORDER BY q.captured_at DESC`;
   }
 
   async softDelete(id: string, capturedBy: string): Promise<Quote | null> {
-    const { rows } = await this.pool.query<Quote>(
-      `UPDATE quotes
-       SET deleted_at = now()
-       WHERE id = $1 AND captured_by = $2 AND deleted_at IS NULL
-       RETURNING *`,
-      [id, capturedBy],
-    );
-    return rows[0] ?? null;
+    const [row] = await this.sql<Quote[]>`
+      UPDATE quotes SET deleted_at = now()
+      WHERE id = ${id} AND captured_by = ${capturedBy} AND deleted_at IS NULL
+      RETURNING *`;
+    return row ?? null;
   }
 
   async getPublicByPerson(accountId: string): Promise<Quote[]> {
-    const { rows } = await this.pool.query<Quote>(
-      `SELECT * FROM quotes
-       WHERE attributed_to = $1
-         AND is_public = true
-         AND deleted_at IS NULL
-       ORDER BY captured_at DESC`,
-      [accountId],
-    );
-    return rows;
+    return this.sql<Quote[]>`
+      SELECT * FROM quotes
+      WHERE attributed_to = ${accountId} AND is_public = true AND deleted_at IS NULL
+      ORDER BY captured_at DESC`;
   }
 
   async setPublic(id: string): Promise<Quote | null> {
-    const { rows } = await this.pool.query<Quote>(
-      `UPDATE quotes
-       SET is_public = true
-       WHERE id = $1 AND deleted_at IS NULL
-       RETURNING *`,
-      [id],
-    );
-    return rows[0] ?? null;
+    const [row] = await this.sql<Quote[]>`
+      UPDATE quotes SET is_public = true WHERE id = ${id} AND deleted_at IS NULL RETURNING *`;
+    return row ?? null;
   }
 }

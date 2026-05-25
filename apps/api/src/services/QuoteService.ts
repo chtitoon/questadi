@@ -34,12 +34,12 @@ export class QuoteService {
   constructor(
     private quoteRepo: QuoteRepository,
     private accountRepo: AccountRepository,
-    private notifService: NotificationService,
   ) {}
 
   async createQuote(
     capturedById: string,
     request: CreateQuoteRequest,
+    notifService: NotificationService,
   ): Promise<{ quote: QuoteDto; isDuplicate: boolean }> {
     const capturer = await this.accountRepo.findById(capturedById);
     if (!capturer?.registered) {
@@ -59,7 +59,7 @@ export class QuoteService {
       attributed_to: attributedToId,
     });
 
-    this.notifService.dispatchAsync(quote.id);
+    notifService.dispatchAsync(quote.id);
 
     return { quote: toQuoteDto(quote), isDuplicate: false };
   }
