@@ -18,6 +18,7 @@ build/
 
 # Generated files
 apps/api/src/types/openapi.ts
+apps/web/src/styles/tokens.css
 
 # iOS
 apps/ios/Pods/
