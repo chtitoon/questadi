@@ -6,8 +6,7 @@ import Logo from '../components/Logo.astro';
 
   <nav class="nav">
     <div class="nav-inner">
-      <a href="#" class="nav-logo"><Logo width={101} /></a>
-      <a href="#waitlist" class="btn-primary">Join the waitlist</a>
+      <a href="#" class="nav-logo"><Logo width={200} /></a>
     </div>
   </nav>
 
@@ -16,10 +15,6 @@ import Logo from '../components/Logo.astro';
       <div class="hero-text">
         <h1 class="hero-title">Save the words<br>that <em>stay with you</em></h1>
         <p class="hero-sub">Questadi lets you capture what someone just said — so you never forget it.</p>
-        <form class="signup-form" id="hero-signup">
-          <input type="email" placeholder="your@email.com" class="email-input" required />
-          <button type="submit" class="btn-primary">Get early access</button>
-        </form>
       </div>
       <div class="hero-card-wrap">
         <div class="quote-card">
@@ -97,19 +92,14 @@ import Logo from '../components/Logo.astro';
 
   <section class="cta-section fade-up" id="waitlist">
     <div class="cta-inner">
-      <h2 class="cta-title">Be the first to know</h2>
-      <p class="cta-sub">Questadi is coming soon. Join the waitlist and get early access.</p>
-      <form class="signup-form" id="cta-signup">
-        <input type="email" placeholder="your@email.com" class="email-input" required />
-        <button type="submit" class="btn-primary">Join the waitlist</button>
-      </form>
+      <h2 class="cta-title">Coming soon.</h2>
     </div>
   </section>
 
   <footer class="footer">
     <div class="footer-inner">
       <div style="opacity: 0.5"><Logo width={74} /></div>
-      <p class="footer-copy">© 2025 Questadi. All rights reserved.</p>
+      <p class="footer-copy">© 2026 Questadi. All rights reserved.</p>
     </div>
   </footer>
 
@@ -128,7 +118,7 @@ import Logo from '../components/Logo.astro';
     left: 0;
     right: 0;
     z-index: 100;
-    padding: var(--space-4) var(--space-6);
+    padding: var(--space-2) var(--space-6);
     background: color-mix(in srgb, var(--bg-base) 85%, transparent);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
@@ -201,27 +191,6 @@ import Logo from '../components/Logo.astro';
     margin-bottom: var(--space-8);
     max-width: 480px;
   }
-
-  .signup-form {
-    display: flex;
-    gap: var(--space-3);
-    flex-wrap: wrap;
-  }
-  .email-input {
-    flex: 1;
-    min-width: 220px;
-    padding: var(--space-3) var(--space-5);
-    border: 1.5px solid var(--color-neutral-300);
-    border-radius: var(--radius-full);
-    font-family: var(--font-family-base);
-    font-size: var(--text-sm);
-    background: var(--bg-surface);
-    color: var(--text-primary);
-    outline: none;
-    transition: border-color var(--duration-fast) var(--easing-default);
-  }
-  .email-input:focus { border-color: var(--color-brand-500); }
-  .email-input::placeholder { color: var(--text-muted); }
 
   .hero-card-wrap {
     display: flex;
@@ -423,39 +392,6 @@ import Logo from '../components/Logo.astro';
 </style>
 
 <script>
-  function handleSignup(formId: string) {
-    const form = document.getElementById(formId) as HTMLFormElement | null;
-    if (!form) return;
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const input = form.querySelector('input[type="email"]') as HTMLInputElement;
-      const btn = form.querySelector('button') as HTMLButtonElement;
-      const email = input?.value.trim();
-      if (!email) return;
-      btn.disabled = true;
-      btn.textContent = 'Joining…';
-      try {
-        const res = await fetch('/api/waitlist', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email }),
-        });
-        if (res.ok) {
-          form.innerHTML = '<p style="color:var(--color-brand-500);font-weight:700;font-size:var(--text-lg)">You\'re on the list! 🎉</p>';
-        } else {
-          btn.disabled = false;
-          btn.textContent = 'Try again';
-        }
-      } catch {
-        btn.disabled = false;
-        btn.textContent = 'Try again';
-      }
-    });
-  }
-
-  handleSignup('hero-signup');
-  handleSignup('cta-signup');
-
   const observer = new IntersectionObserver(
     (entries) => entries.forEach((e) => { if (e.isIntersecting) e.target.classList.add('visible'); }),
     { threshold: 0.15 }
