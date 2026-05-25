@@ -2,6 +2,399 @@
 import Base from '../layouts/Base.astro';
 import Logo from '../components/Logo.astro';
 ---
-<Base>
-  <Logo width={248} />
+<Base title="Questadi — Save the words that stay with you">
+
+  <nav class="nav">
+    <div class="nav-inner">
+      <a href="#" class="nav-logo"><Logo width={200} /></a>
+    </div>
+  </nav>
+
+  <section class="hero">
+    <div class="hero-inner">
+      <div class="hero-text">
+        <h1 class="hero-title">Save the words<br>that <em>stay with you</em></h1>
+        <p class="hero-sub">Questadi lets you capture what someone just said — so you never forget it.</p>
+      </div>
+      <div class="hero-card-wrap">
+        <div class="quote-card">
+          <p class="quote-text">"It takes time to wait."</p>
+          <div class="quote-meta">
+            <span class="quote-author">Louis</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="how-section fade-up">
+    <div class="section-inner">
+      <h2 class="section-title">How it works</h2>
+      <p class="section-sub">Three simple steps to build your personal quote library.</p>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <h3>Type what they said</h3>
+          <p>Open Questadi and start typing immediately — the cursor is already in the quote field. No friction between the moment and the memory.</p>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <h3>Tag who said it</h3>
+          <p>After a few words, a gentle nudge appears — who said this? Pick from your people or add someone new. One tap.</p>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <h3>Save & go back to living</h3>
+          <p>It's saved. They get a quiet SMS — "Someone thought what you said was worth keeping." You go back to the conversation.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="features-section fade-up">
+    <div class="section-inner">
+      <h2 class="section-title">Built for real life</h2>
+      <p class="section-sub">Designed to disappear into the moment.</p>
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">⚡</div>
+          <h3>Gone in seconds. Saved forever.</h3>
+          <p>Under 5 seconds from unlock to saved. The conversation keeps going — the moment stays uninterrupted, and the words stay with you.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🗂️</div>
+          <h3>Your personal quote library</h3>
+          <p>Every quote lives simply: what they said, who said it, and when. A quiet record of the people around you being human.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">💬</div>
+          <h3>A quiet nod to the speaker</h3>
+          <p>The person you quoted gets a simple SMS. No account needed. They'll know someone thought what they said was worth keeping.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🎁</div>
+          <h3>Turn a quote into a gift</h3>
+          <p>Print it on a card, a mug, a t-shirt. Give someone the gift of knowing they once said something unforgettable.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🔒</div>
+          <h3>Completely private by default</h3>
+          <p>Your quotes are yours. Nothing is public unless you choose. Share a quote like a URL — a beautiful, personal web moment.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🌱</div>
+          <h3>No account required to receive</h3>
+          <p>The person you quoted doesn't need to download anything. They get a link. They see what you saved. That's it.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="cta-section fade-up" id="waitlist">
+    <div class="cta-inner">
+      <h2 class="cta-title">Coming soon.</h2>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <div style="opacity: 0.5"><Logo width={74} /></div>
+      <p class="footer-copy">© 2026 Questadi. All rights reserved.</p>
+    </div>
+  </footer>
+
 </Base>
+
+<style is:global>
+  body {
+    display: block;
+    padding: 0;
+    overflow-x: hidden;
+  }
+
+  .nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    padding: var(--space-2) var(--space-6);
+    background: color-mix(in srgb, var(--bg-base) 85%, transparent);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--color-neutral-200);
+  }
+  @media (prefers-color-scheme: dark) {
+    .nav { border-color: var(--color-neutral-800); }
+  }
+  .nav-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .nav-logo { display: flex; align-items: center; text-decoration: none; }
+
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    background: var(--color-brand-500);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-full);
+    padding: var(--space-3) var(--space-6);
+    font-family: var(--font-family-base);
+    font-size: var(--text-sm);
+    font-weight: var(--font-bold);
+    cursor: pointer;
+    text-decoration: none;
+    transition:
+      background var(--duration-fast) var(--easing-default),
+      transform var(--duration-fast) var(--easing-default);
+  }
+  .btn-primary:hover { background: var(--color-brand-600); transform: translateY(-1px); }
+  .btn-primary:active { transform: translateY(0); }
+  .btn-primary:disabled { opacity: 0.6; cursor: default; transform: none; }
+
+  .hero {
+    min-height: 100dvh;
+    display: flex;
+    align-items: center;
+    padding: calc(80px + var(--space-12)) var(--space-6) var(--space-16);
+  }
+  .hero-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-16);
+    align-items: center;
+    width: 100%;
+  }
+  .hero-title {
+    font-size: var(--text-5xl);
+    font-weight: var(--font-extrabold);
+    line-height: var(--leading-tight);
+    letter-spacing: var(--tracking-tight);
+    color: var(--text-primary);
+    margin-bottom: var(--space-6);
+  }
+  .hero-title em {
+    font-style: italic;
+    color: var(--color-brand-500);
+  }
+  .hero-sub {
+    font-size: var(--text-lg);
+    color: var(--text-secondary);
+    line-height: var(--leading-relaxed);
+    margin-bottom: var(--space-8);
+    max-width: 480px;
+  }
+
+  .hero-card-wrap {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  .quote-card {
+    background: var(--bg-surface);
+    border-radius: var(--radius-2xl);
+    padding: var(--space-10);
+    box-shadow: var(--shadow-xl);
+    max-width: 400px;
+    width: 100%;
+    animation: float 4s ease-in-out infinite;
+  }
+  .quote-text {
+    font-size: var(--text-xl);
+    font-weight: var(--font-semibold);
+    line-height: var(--leading-snug);
+    color: var(--text-primary);
+    font-style: italic;
+    margin-bottom: var(--space-6);
+  }
+  .quote-meta {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    margin-bottom: var(--space-4);
+  }
+  .quote-author {
+    font-size: var(--text-sm);
+    font-weight: var(--font-bold);
+    color: var(--color-brand-500);
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+
+  .section-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    width: 100%;
+  }
+  .section-title {
+    font-size: var(--text-4xl);
+    font-weight: var(--font-extrabold);
+    letter-spacing: var(--tracking-tight);
+    line-height: var(--leading-tight);
+    color: var(--text-primary);
+    margin-bottom: var(--space-4);
+  }
+  .section-sub {
+    font-size: var(--text-lg);
+    color: var(--text-secondary);
+    line-height: var(--leading-relaxed);
+    margin-bottom: var(--space-12);
+    max-width: 560px;
+  }
+
+  .how-section {
+    padding: var(--space-24) var(--space-6);
+    background: var(--bg-surface);
+  }
+  .steps {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-8);
+  }
+  .step { text-align: center; padding: var(--space-8); }
+  .step-num {
+    width: 48px;
+    height: 48px;
+    border-radius: var(--radius-full);
+    background: var(--color-brand-500);
+    color: #fff;
+    font-size: var(--text-lg);
+    font-weight: var(--font-extrabold);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto var(--space-5);
+  }
+  .step h3 {
+    font-size: var(--text-xl);
+    font-weight: var(--font-bold);
+    color: var(--text-primary);
+    margin-bottom: var(--space-3);
+  }
+  .step p {
+    font-size: var(--text-base);
+    color: var(--text-secondary);
+    line-height: var(--leading-relaxed);
+  }
+
+  .features-section {
+    padding: var(--space-24) var(--space-6);
+    background: var(--bg-base);
+  }
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-6);
+  }
+  .feature-card {
+    background: var(--bg-surface);
+    border-radius: var(--radius-xl);
+    padding: var(--space-8);
+    box-shadow: var(--shadow-sm);
+    transition:
+      box-shadow var(--duration-normal) var(--easing-default),
+      transform var(--duration-normal) var(--easing-default);
+  }
+  .feature-card:hover { box-shadow: var(--shadow-lg); transform: translateY(-2px); }
+  .feature-icon { font-size: 28px; margin-bottom: var(--space-4); }
+  .feature-card h3 {
+    font-size: var(--text-lg);
+    font-weight: var(--font-bold);
+    color: var(--text-primary);
+    margin-bottom: var(--space-3);
+  }
+  .feature-card p {
+    font-size: var(--text-base);
+    color: var(--text-secondary);
+    line-height: var(--leading-relaxed);
+  }
+
+  .cta-section {
+    padding: var(--space-24) var(--space-6);
+    background: var(--bg-surface);
+    text-align: center;
+  }
+  .cta-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+  }
+  .cta-title {
+    font-size: var(--text-4xl);
+    font-weight: var(--font-extrabold);
+    letter-spacing: var(--tracking-tight);
+    line-height: var(--leading-tight);
+    color: var(--text-primary);
+    margin-bottom: var(--space-4);
+  }
+  .cta-sub {
+    font-size: var(--text-lg);
+    color: var(--text-secondary);
+    line-height: var(--leading-relaxed);
+    margin-bottom: var(--space-8);
+    max-width: 560px;
+  }
+
+  .footer {
+    padding: var(--space-10) var(--space-6);
+    border-top: 1px solid var(--color-neutral-200);
+    background: var(--bg-base);
+  }
+  @media (prefers-color-scheme: dark) {
+    .footer { border-color: var(--color-neutral-800); }
+  }
+  .footer-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: var(--space-4);
+  }
+  .footer-copy {
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+  }
+
+  .fade-up {
+    opacity: 0;
+    transform: translateY(32px);
+    transition:
+      opacity 0.6s var(--easing-default),
+      transform 0.6s var(--easing-default);
+  }
+  .fade-up.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  @media (max-width: 768px) {
+    .hero-inner { grid-template-columns: 1fr; gap: var(--space-10); }
+    .hero-title { font-size: var(--text-3xl); }
+    .hero-card-wrap { order: -1; }
+    .steps { grid-template-columns: 1fr; }
+    .features-grid { grid-template-columns: 1fr; }
+    .section-title, .cta-title { font-size: var(--text-3xl); }
+  }
+</style>
+
+<script>
+  const observer = new IntersectionObserver(
+    (entries) => entries.forEach((e) => { if (e.isIntersecting) e.target.classList.add('visible'); }),
+    { threshold: 0.15 }
+  );
+  document.querySelectorAll('.fade-up').forEach((el) => observer.observe(el));
+</script>
