@@ -1,6 +1,4 @@
 name = "questadi-web"
 compatibility_date = "2026-04-15"
-main = "dist/server/_worker.js"
-
 [assets]
 directory = "dist/client"
