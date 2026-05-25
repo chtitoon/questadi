@@ -7,5 +7,9 @@ compatibility_flags = ["nodejs_compat"]
 binding = "HYPERDRIVE"
 id = "00e0e66f6275406b92dfeca83cf61571"
 
-[observability]
+[observability.logs]
+enabled = true
+invocation_logs = true
+
+[observability.traces]
 enabled = true
