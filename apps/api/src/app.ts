@@ -26,9 +26,9 @@ app.use('*', async (c, next) => {
   const sql = postgres(connStr, { max: 1, fetch_types: false });
   c.set('sql', sql);
   try {
-    return await next();
+    await next();
   } finally {
-    await sql.end();
+    c.executionCtx.waitUntil(sql.end({ timeout: 5 }));
   }
 });
 
