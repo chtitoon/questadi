@@ -1,11 +1,13 @@
 {
   "name": "questadi-web",
   "private": true,
+  "type": "module",
   "scripts": {
-    "dev": "astro dev",
-    "build": "astro build",
+    "tokens": "node scripts/generate-tokens.js",
+    "dev": "npm run tokens && astro dev",
+    "build": "npm run tokens && astro build",
     "preview": "astro preview",
-    "deploy": "astro build && wrangler deploy"
+    "deploy": "npm run build && wrangler deploy"
   },
   "dependencies": {
     "@astrojs/cloudflare": "^13.5.4",
