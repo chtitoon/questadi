@@ -1,10 +1,11 @@
 import type { APIRoute } from 'astro';
+import { env } from 'cloudflare:workers';
 
 export const ALL: APIRoute = async ({ request, params }) => {
-  const apiUrl = import.meta.env.API_URL;
+  const api = (env as unknown as { API: Fetcher }).API;
   const path = params.path ?? '';
   const url = new URL(request.url);
-  const target = `${apiUrl}/${path}${url.search}`;
+  const target = new URL(`/${path}${url.search}`, 'https://api');
 
   const headers = new Headers(request.headers);
   headers.delete('host');
@@ -15,5 +16,5 @@ export const ALL: APIRoute = async ({ request, params }) => {
     init.duplex = 'half';
   }
 
-  return fetch(new Request(target, init));
+  return api.fetch(new Request(target, init));
 };

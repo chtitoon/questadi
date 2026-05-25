@@ -2,8 +2,10 @@
 import Base from '../../layouts/Base.astro';
 import Author from '../../components/Author.astro';
 
+import { env } from 'cloudflare:workers';
+
 const { accountId } = Astro.params;
-const apiUrl = import.meta.env.API_URL;
+const api = (env as unknown as { API: Fetcher }).API;
 
 type AuthorData = {
   accountId: string;
@@ -15,7 +17,7 @@ let data: AuthorData | null = null;
 let errorCode: string | null = null;
 
 try {
-  const res = await fetch(`${apiUrl}/quotes?author=${accountId}`);
+  const res = await api.fetch(new Request(`https://api/quotes?author=${accountId}`));
   if (res.ok) {
     data = await res.json();
   } else {
