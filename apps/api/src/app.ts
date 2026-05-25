@@ -30,7 +30,8 @@ app.use('*', async (c, next) => {
   try {
     await next();
   } finally {
-    c.executionCtx.waitUntil(client.end());
+    const endPromise = client.end().catch(() => {});
+    try { c.executionCtx.waitUntil(endPromise); } catch { /* no ExecutionContext (e.g. local dev) */ }
   }
 });
 
